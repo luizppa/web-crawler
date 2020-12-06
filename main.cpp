@@ -32,8 +32,8 @@ void crawl_through(char const starting_url[], int n){
 
     float total_time_in_seconds = ((float)total_time)/1000.0;
     float average_time_in_seconds = total_time_in_seconds/((float)pages_to_crawl);
-    std::cout << "Duration: " << total_time << " milliseconds" << std::endl;
-    std::cout << "Average time spent per page: " << average_time_in_seconds << " milliseconds" << std::endl;
+    std::cout << "Duration: " << total_time_in_seconds << " seconds" << std::endl;
+    std::cout << "Average time spent per page: " << average_time_in_seconds << " seconds" << std::endl;
 }
 
 int main(int argc, char* const argv[]){
