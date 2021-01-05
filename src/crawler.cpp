@@ -1,5 +1,6 @@
 #include <CkSpider.h>
 #include<string>
+#include<cstring>
 #include<iostream>
 #include<fstream>
 #include<chrono>
@@ -7,12 +8,14 @@
 #include<queue>
 #include<map>
 #include<thread>
-#include <unistd.h>
+#include<unistd.h>
 
 #include "../include/crawler.hpp"
+#include "../include/crawler_task.hpp"
 
 namespace web_crawler {
     Crawler::Crawler(const char* seed_file_path, int pages_to_collect){
+        this->threads_log.open(THREADS_LOG_PATH);
         std::ifstream input_file;
         input_file.open(seed_file_path);
         if(input_file.is_open()){
@@ -21,8 +24,13 @@ namespace web_crawler {
                 input_file  >> url;
                 this->seed_urls.push_back(url);
             }
+            input_file.close();
             this->pages_to_collect = pages_to_collect;
         }
+    }
+
+    Crawler::~Crawler(){
+        this->threads_log.close();
     }
 
     bool Crawler::finished(){
@@ -30,18 +38,37 @@ namespace web_crawler {
     }
 
     bool Crawler::waiting_tasks(){
-        return this->scheduler.size() == 0 && this->threads.size() > 0;
+        return this->scheduler.size() == 0 && this->tasks.size() > 0;
     }
 
-    void Crawler::dispose_idle_threads(){
-        std::vector<std::thread*>::iterator it = this->threads.begin();
-        while(it != this->threads.end()){
-            std::thread* thread = *it;
-            it++;
-            if(!thread->joinable()){
-                std::cout << "Disposing thread: "  << thread->get_id() << '\n';
-                this->threads.erase(it-1);
-                delete thread;
+    bool Crawler::processing_tasks(){
+        return  this->tasks.size() > 0 || this->scheduler.size() > 0;
+    }
+
+    bool Crawler::max_threads_reached(){
+        return this->tasks.size() >= MAX_THREADS;
+    }
+
+    void Crawler::start_task(std::string url){
+        CrawlerTask* task = new CrawlerTask();
+        std::thread* thread = new std::thread(this->crawl_url, url, this, task);
+        this->threads_log << "Created task " << thread->get_id() << " for " << url << '\n';
+        task->set_thread(thread);
+        this->tasks.push_back(task);
+    }
+
+    void Crawler::dispose_idle_tasks(){
+        std::vector<CrawlerTask*>::iterator it = this->tasks.begin();
+        while(it != this->tasks.end()){
+            CrawlerTask* task = *it;
+            if(task->is_finished()){
+                it = it + 1;
+                this->threads_log << "Disposing thread: " << task->get_thread()->get_id() << '\n';
+                this->tasks.erase(it-1);
+                delete task;
+            }
+            else{
+                it = it + 1;
             }
         }
     }
@@ -53,47 +80,52 @@ namespace web_crawler {
         }
     }
 
-    void Crawler::crawl_url(std::string url, Crawler* crawler){
+    void Crawler::crawl_url(std::string url, Crawler* crawler, CrawlerTask* task){
         CkSpider spider;
         spider.AddAvoidOutboundLinkPattern("*twitter.com*");
         spider.put_ConnectTimeout(5);
-        if(spider.getUrlDomain(url.c_str()) == NULL){
+        const char* domain = spider.getUrlDomain(url.c_str());
+        if(url.length() == 0 || domain == NULL || strlen(domain) == 0){
+            task->finish();
             return;
         }
-        spider.Initialize(spider.getUrlDomain(url.c_str()));
+        std::ofstream error_log(ERROR_LOG_PATH);
+        spider.Initialize(domain);
         spider.AddUnspidered(url.c_str());
         bool success = spider.CrawlNext();
         if(success){
             int links_number = spider.get_NumUnspidered();
-            crawler->registry[url] = links_number;
             spider.SleepMs(100);
-            for(int i = 0; i < links_number && !crawler->finished(); i++){
+            for(int i = 0; i < links_number; i++){
                 success = spider.CrawlNext();
                 if(crawler->finished()){
                     break;
                 }
                 else if(success){
+                    crawler->registry[url]++;
                     crawler->visited_pages++;
                     std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl();
                     std::cout << "\nVisited pages: " << crawler->visited_pages;
-                    std::cout << "\nActive threads: " << crawler->threads.size() << "\n\n";
+                    std::cout << "\nActive tasks: " << crawler->tasks.size() << "\n\n";
 
                     for(int i = 0; i < spider.get_NumOutboundLinks(); i++){
                         std::string url = std::string(spider.getOutboundLink(i));
                         crawler->queue_if_unvisited(url);
                     }
                     spider.ClearOutboundLinks();
-                    spider.SleepMs(100);
                 }
                 else{
-                    std::cout << spider.lastErrorText() << std::endl;
+                    error_log << spider.lastErrorText() << '\n';
                 }
+                spider.SleepMs(100);
             }
 
-            for(int i = 0; i < spider.get_NumUnspidered(); i++){
-                spider.SkipUnspidered(i);
-            }
+            // for(int i = 0; i < spider.get_NumUnspidered(); i++){
+            //     spider.SkipUnspidered(i);
+            // }
         }
+        error_log.close();
+        task->finish();
     }
 
     void Crawler::crawl(){
@@ -102,27 +134,37 @@ namespace web_crawler {
             this->registry[*it] = 0;
         }
 
-        while(this->visited_pages < this->pages_to_collect && (this->scheduler.size() > 0 || this->threads.size() > 0)){
-            std::string current_url = this->scheduler.front();
+        while(!this->finished() && this->processing_tasks()){
+            std::string url = this->scheduler.front();
             this->scheduler.pop();
-
-            this->threads.push_back(new std::thread(this->crawl_url, current_url, this));
-            while(this->waiting_tasks() || (this->threads.size() >= MAX_THREADS)){
-                this->dispose_idle_threads();
-                usleep(5000000);
+            this->start_task(url);
+            
+            while((this->max_threads_reached() || this->waiting_tasks())  && !this->finished()){
+                usleep(100000);
+                this->dispose_idle_tasks();
             }
         }
 
-        if(visited_pages < this->pages_to_collect){
+        if(!this->finished()){
             std::cout << "BAD SEED \n\n";
         }
 
-        std::cout << this->threads.size() << " threads active:\n";
-        for(std::vector<std::thread*>::iterator it = this->threads.begin(); it != this->threads.end(); ++it){
-            std::thread* thread = *it;
-            std::cout  << "Joining thread " << thread->get_id() << "... \n";
-            thread->join();
-            delete thread;
+        this->threads_log << "Joining " << this->tasks.size() << " threads active\n";
+        usleep(500000);
+        this->dispose_idle_tasks();
+    }
+
+    void Crawler::report(){
+        std::map<std::string, int> visited_links;
+        for(std::map<std::string, int>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
+            if(it->second > 0){
+                visited_links[it->first] = it->second;
+            }
+        }
+
+        std::cout << "\n" << visited_links.size() <<  " links visited:\n\n";
+        for(std::map<std::string, int>::iterator it = visited_links.begin(); it != visited_links.end(); ++it){
+            std::cout << "Collected " << it->second << " pages from " << it->first << '\n';
         }
     }
 }

@@ -2,7 +2,7 @@
 
 #include "./include/crawler.hpp"
 
-#define PAGES_TO_COLLECT 100000
+#define PAGES_TO_COLLECT 10
 
 int main(int argc, char* const argv[]){
     if(argc < 2){
@@ -11,6 +11,7 @@ int main(int argc, char* const argv[]){
     }
     web_crawler::Crawler* crawler = new web_crawler::Crawler(argv[1], PAGES_TO_COLLECT);
     crawler->crawl();
+    crawler->report();
     delete crawler;
     return 0;
 }

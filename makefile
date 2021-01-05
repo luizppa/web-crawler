@@ -28,4 +28,4 @@ run:
 	$(TARGET_PATH) ./input/seed > ./output/crawler.log
 
 mem:
-	valgrind --leak-check=full --show-leak-kinds=all $(TARGET_PATH) ./input/seed > ./output/mem.log
+	valgrind --leak-check=full --show-leak-kinds=all --log-file="./output/mem.log" $(TARGET_PATH) ./input/seed > ./output/crawler.log
