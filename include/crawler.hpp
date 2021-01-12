@@ -23,6 +23,7 @@ namespace web_crawler {
             std::mutex mutex;
             int pages_to_collect;
             int visited_pages = 0;
+            int milliseconds = 0;
             std::vector<std::string> seed_urls;
             std::vector<std::thread*> tasks;
             std::map<std::string, Record*> registry;

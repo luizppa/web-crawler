@@ -139,13 +139,16 @@ namespace web_crawler {
                 int links_number = spider.get_NumUnspidered();
                 spider.SleepMs(100);
                 for(int i = 0; i < links_number; i++){
+                    auto start_time = std::chrono::high_resolution_clock::now();
                     success = spider.CrawlNext();
+                    auto end_time = std::chrono::high_resolution_clock::now();
+                    int time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
                     if(crawler->finished()){
                         break;
                     }
                     else if(success){
                             crawler->mutex.lock();
-                            crawler->registry[registry_entry]->visit_page(url, 0.0);
+                            crawler->registry[registry_entry]->visit_page(url, time);
                             crawler->visited_pages++;
                             std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl() << "\n\n";
                             crawler->mutex.unlock();
@@ -180,7 +183,7 @@ namespace web_crawler {
         for(std::vector<std::string>::iterator it = this->seed_urls.begin(); it != this->seed_urls.end(); ++it){
             this->queue_if_unvisited(*it);
         }
-
+        auto start_time = std::chrono::high_resolution_clock::now();
         while(!this->finished() && this->processing_tasks()){
             this->start_task();
             
@@ -188,27 +191,35 @@ namespace web_crawler {
                 usleep(100000);
             }
         }
+        auto end_time = std::chrono::high_resolution_clock::now();
+        this->milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
         if(!this->finished()){
             std::cout << "BAD SEED \n\n";
         }
-
-        this->threads_log << "Joining " << this->tasks.size() << " threads active\n";
-        usleep(500000);
     }
 
     void Crawler::report(){
+        int total_time = 0;
+        int total_pages = 0;
         std::map<std::string, int> visited_links;
         for(std::map<std::string, Record*>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
             Record* record = it->second;
             if(record->get_visited_pages() > 0){
                 visited_links[it->first] = record->get_visited_pages();
+                total_pages += record->get_visited_pages();
+                total_time += record->get_total_time();
             }
         }
 
         std::cout << "\n" << visited_links.size() <<  " links visited:\n\n";
         for(std::map<std::string, int>::iterator it = visited_links.begin(); it != visited_links.end(); ++it){
-            std::cout << "Collected " << it->second << " pages from " << it->first << '\n';
+            std::cout << "Collected " << it->second << " pages from " << it->first << "\n";
         }
+
+        float average_time_in_seconds = (((float)total_time)/((float)total_pages))/1000.0;
+
+        std::cout << "\nCrawled " << total_pages << " in " << ((float)this->milliseconds)/1000.0 << " seconds (" << MAX_THREADS << " simultaneous processes)\n";
+        std::cout << average_time_in_seconds << " in average per page\n\n";
     }
 }

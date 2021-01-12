@@ -14,7 +14,7 @@ namespace web_crawler {
         return this->visited_pages;
     }
 
-    float Record::get_total_time(){
+    int Record::get_total_time(){
         return this->total_time;
     }
 
@@ -51,7 +51,7 @@ namespace web_crawler {
         this->urls[url] = 0;
     }
 
-    void Record::visit_page(std::string url, float time){
+    void Record::visit_page(std::string url, int time){
         this->visited_pages++;
         this->total_time += time;
         this->urls[url] += 1;
