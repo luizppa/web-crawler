@@ -2,7 +2,7 @@ CC=g++
 STD=c++17
 CFLAGS=-Wall -Wextra -std=$(STD) -pthread
 CLIBS=-l chilkat-9.5.0
-TARGET_NAME=crawler
+TARGET_NAME=web-crawler
 TARGET_PATH=$(BUILD_PATH)/$(TARGET_NAME)
 BUILD_PATH=./build
 SOURCE_PATH=./src

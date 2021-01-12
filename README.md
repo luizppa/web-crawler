@@ -8,7 +8,7 @@ This is an example on how to use Chilkat's CkSpider to crawl web pages. The outp
 
 [Installing Chilkat for cpp](https://www.chilkatsoft.com/downloads_CPP.asp)
 
-After installing Chilkat, you can build the project with ```make```, which creates the executable file ```build/crawler```. To run the application, you can either execute ```make run``` (to run with sample inputs) or use ```./build/ir_tp1 [PATH_TO_SEED_FILE]``` replacing ```[PATH_TO_SEED_FILE]``` with the path to the file containing your seeds. Your seed file should be a list of urls where the crawler will start visiting separated with line breaks like:
+After installing Chilkat, you can build the project with ```make```, which creates the executable file ```build/web-crawler```. To run the application, you can either execute ```make run``` (to run with sample inputs) or use ```./build/web-crawler [PATH_TO_SEED_FILE]``` replacing ```[PATH_TO_SEED_FILE]``` with the path to the file containing your seeds. Your seed file should be a list of urls where the crawler will start visiting separated with line breaks like:
 
 ```
 ufmg.br
