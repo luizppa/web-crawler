@@ -27,5 +27,9 @@ clean:
 run:
 	$(TARGET_PATH) ./input/seed > ./output/crawler.log
 
+reset:
+	rm -rf ./output/*.log
+	rm -rf ./output/html/*.html
+
 mem:
 	valgrind --leak-check=full --show-leak-kinds=all --log-file="./output/mem.log" --max-threads=100 $(TARGET_PATH) ./input/seed > ./output/crawler.log

@@ -13,6 +13,7 @@
 #include"./record.hpp"
 
 #define MAX_THREADS 50
+#define HTML_PATH "./output/html/"
 #define THREADS_LOG_PATH "./output/threads.log"
 #define ERROR_LOG_PATH "./output/error.log"
 

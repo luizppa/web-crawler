@@ -1,5 +1,6 @@
 #include<CkSpider.h>
 #include<string>
+#include<sstream>
 #include<cstring>
 #include<iostream>
 #include<fstream>
@@ -151,6 +152,12 @@ namespace web_crawler {
                             crawler->registry[registry_entry]->visit_page(url, time);
                             crawler->visited_pages++;
                             std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl() << "\n\n";
+                            std::stringstream html_path;
+                            html_path << HTML_PATH << crawler->visited_pages << ".html";
+                            std::ofstream html(html_path.str());
+                            html << "<!--" << spider.lastUrl() << "-->\n";
+                            html << spider.lastHtml();
+                            html.close();
                             crawler->mutex.unlock();
 
                             for(int i = 0; i < spider.get_NumOutboundLinks(); i++){
