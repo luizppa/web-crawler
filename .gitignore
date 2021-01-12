@@ -1,5 +1,5 @@
 build/*
 !build/.gitkeep
 
-output/*
-!output/.gitkeep
+output/**/*.log
+output/**/*.html

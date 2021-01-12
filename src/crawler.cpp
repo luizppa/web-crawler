@@ -1,4 +1,4 @@
-#include <CkSpider.h>
+#include<CkSpider.h>
 #include<string>
 #include<cstring>
 #include<iostream>
@@ -8,9 +8,11 @@
 #include<queue>
 #include<map>
 #include<thread>
+#include<ctime>
 #include<unistd.h>
 
 #include "../include/crawler.hpp"
+#include "../include/record.hpp"
 
 namespace web_crawler {
     Crawler::Crawler(const char* seed_file_path, int pages_to_collect){
@@ -29,6 +31,9 @@ namespace web_crawler {
     }
 
     Crawler::~Crawler(){
+        for(std::map<std::string, Record*>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
+            delete it->second;
+        }
         this->threads_log.close();
     }
 
@@ -49,7 +54,36 @@ namespace web_crawler {
     }
 
     std::string Crawler::get_next_url(){
-        return this->scheduler.pop();
+        CkSpider spider;
+        std::string url;
+        while(this->processing_tasks() || this->waiting_tasks()){
+            url = this->scheduler.pop();
+            std::string domain;
+            try{
+                domain = std::string(spider.getUrlDomain(url.c_str()));
+            }
+            catch(...){
+                continue;
+            }
+            if(this->registry.find(domain) == this->registry.end()){
+                this->mutex.lock();
+                this->registry[domain] = new Record(domain);
+                this->registry[domain]->start_visiting(url);
+                this->mutex.unlock();
+                return url;
+            }
+            else if(this->registry[domain]->can_start_visiting(url)){
+                this->mutex.lock();
+                this->registry[domain]->start_visiting(url);
+                this->mutex.unlock();
+                return url;
+            }
+            else{
+                this->scheduler.push(url);
+                usleep(1000000);
+            }
+        }
+        return std::string("");
     }
 
     void Crawler::start_task(){
@@ -72,14 +106,11 @@ namespace web_crawler {
 
     void Crawler::queue_if_unvisited(std::string url){
         CkSpider spider;
-        if(url.c_str() != nullptr && strlen(url.c_str()) > 0){
-            std::string domain = std::string(spider.getUrlDomain(url.c_str()));
-            if(this->registry.find(domain) == this->registry.end()){
-                this->scheduler.push(url);
-                this->mutex.lock();
-                this->registry[domain] = 0;
-                this->mutex.unlock();
-            }
+        std::string domain = std::string(spider.getUrlDomain(url.c_str()));
+        if(this->registry.find(domain) == this->registry.end() || !this->registry[domain]->has_visited(url)){
+            this->mutex.lock();
+            this->scheduler.push(url);
+            this->mutex.unlock();
         }
     }
 
@@ -97,7 +128,8 @@ namespace web_crawler {
             }
             std::string url = crawler->get_next_url();
             const char* domain = spider.getUrlDomain(url.c_str());
-            if(url.length() == 0 || domain == NULL || strlen(domain) == 0){
+            std::string registry_entry = std::string(domain);
+            if(url.length() == 0 || domain == nullptr || strlen(domain) == 0){
                 continue;
             }
             spider.Initialize(domain);
@@ -113,12 +145,9 @@ namespace web_crawler {
                     }
                     else if(success){
                             crawler->mutex.lock();
-                            crawler->registry[url]++;
+                            crawler->registry[registry_entry]->visit_page(url, 0.0);
                             crawler->visited_pages++;
-
-                            std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl();
-                            std::cout << "\nVisited pages: " << crawler->visited_pages;
-                            std::cout << "\nActive tasks: " << crawler->tasks.size() << "\n\n";
+                            std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl() << "\n\n";
                             crawler->mutex.unlock();
 
                             for(int i = 0; i < spider.get_NumOutboundLinks(); i++){
@@ -126,8 +155,8 @@ namespace web_crawler {
                                     std::string url = std::string(spider.getOutboundLink(i));
                                     crawler->queue_if_unvisited(url);
                                 }
-                                catch(std::logic_error e){
-                                    error_log << "\n\n" << e.what() <<  ": " << spider.getOutboundLink(i) << "\n\n" << std::endl;
+                                catch(...){
+                                    error_log << "Can't resolve domain for: " << spider.getOutboundLink(i) << "\n" << std::endl;
                                 }
                             }
                             spider.ClearOutboundLinks();
@@ -137,6 +166,7 @@ namespace web_crawler {
                     }
                     spider.SleepMs(100);
                 }
+                crawler->registry[registry_entry]->finish();
 
                 for(int i = 0; i < spider.get_NumUnspidered(); i++){
                     spider.SkipUnspidered(i);
@@ -169,9 +199,10 @@ namespace web_crawler {
 
     void Crawler::report(){
         std::map<std::string, int> visited_links;
-        for(std::map<std::string, int>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
-            if(it->second > 0){
-                visited_links[it->first] = it->second;
+        for(std::map<std::string, Record*>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
+            Record* record = it->second;
+            if(record->get_visited_pages() > 0){
+                visited_links[it->first] = record->get_visited_pages();
             }
         }
 

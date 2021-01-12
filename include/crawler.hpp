@@ -10,6 +10,7 @@
 #include<mutex>
 
 #include"./scheduler.hpp"
+#include"./record.hpp"
 
 #define MAX_THREADS 50
 #define THREADS_LOG_PATH "./output/threads.log"
@@ -24,7 +25,7 @@ namespace web_crawler {
             int visited_pages = 0;
             std::vector<std::string> seed_urls;
             std::vector<std::thread*> tasks;
-            std::map<std::string, int> registry;
+            std::map<std::string, Record*> registry;
             Scheduler scheduler;
             std::ofstream threads_log;
 
