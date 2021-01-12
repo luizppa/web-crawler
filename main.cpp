@@ -2,7 +2,7 @@
 
 #include "./include/crawler.hpp"
 
-#define PAGES_TO_COLLECT 100
+#define PAGES_TO_COLLECT 100000
 
 int main(int argc, char* const argv[]){
     if(argc < 2){
