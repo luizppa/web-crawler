@@ -14,7 +14,7 @@ namespace web_crawler {
             DocumentOccurrence(int document_id);
             void addOccurence(int position);
 
-    }
+    };
 }
 
 #endif

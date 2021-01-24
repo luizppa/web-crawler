@@ -1,4 +1,4 @@
-#include"../document-occurence.hpp"
+#include"../include/document-occurrence.hpp"
 
 namespace web_crawler{
     DocumentOccurrence::DocumentOccurrence(int document_id){
@@ -6,7 +6,7 @@ namespace web_crawler{
     }
 
     void DocumentOccurrence::addOccurence(int position){
-        this->positions.pushBack(position);
+        this->positions.push_back(position);
         this->occurrencies++;
     }
 }

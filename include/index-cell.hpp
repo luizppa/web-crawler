@@ -2,20 +2,21 @@
 #define INDEX_CELL_H
 
 #include<map>
+#include<string>
 
-#include"./document-occurence.hpp"
+#include"./document-occurrence.hpp"
 
 namespace web_crawler {
     class IndexCell {
         private:
-            char* term;
+            std::string term;
             double ni;
-            std::map<int, DocumentOccurrence> documents;
+            std::map<int, DocumentOccurrence*> documents;
 
         public:
-            IndexCell(char* term);
+            IndexCell(std::string term);
             void addDocument(int document_id, int position);
-    }
+    };
 }
 
 #endif

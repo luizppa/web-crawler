@@ -11,6 +11,7 @@
 
 #include"./scheduler.hpp"
 #include"./record.hpp"
+#include"./index-cell.hpp"
 
 #define MAX_THREADS 50
 #define HTML_PATH "./output/html/"
@@ -30,6 +31,7 @@ namespace web_crawler {
             std::map<std::string, Record*> registry;
             Scheduler scheduler;
             std::ofstream threads_log;
+            std::map<std::string, IndexCell*> dictionary;
 
             std::string get_next_url();
             void queue_if_unvisited(std::string url);
