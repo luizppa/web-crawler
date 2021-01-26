@@ -8,10 +8,13 @@ namespace web_crawler {
         private:
             int document_id;
             int occurrencies = 0;
-            std::vector<int> positions;
+            std::vector<int>* positions;
 
         public:
             DocumentOccurrence(int document_id);
+            int get_id();
+            int get_occurrencies();
+            std::vector<int>* get_positions();
             void addOccurence(int position);
 
     };

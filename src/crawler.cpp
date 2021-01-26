@@ -229,4 +229,32 @@ namespace web_crawler {
         std::cout << "\nCrawled " << total_pages << " in " << ((float)this->milliseconds)/1000.0 << " seconds (" << MAX_THREADS << " simultaneous processes)\n";
         std::cout << average_time_in_seconds << " in average per page\n\n";
     }
+
+    void Crawler::build_index(){
+        // 
+    }
+
+    void Crawler::save_index(){
+        std::ofstream index_file(INDEX_PATH);
+        for(std::map<std::string, IndexCell*>::iterator it = this->dictionary.begin(); it != this->dictionary.end(); ++it){
+            IndexCell* cell = it->second;
+            index_file << cell->get_term() << ' ' << cell->get_ni();
+            std::map<int, DocumentOccurrence*>* documents = cell->get_documents();
+            for(std::map<int, DocumentOccurrence*>::iterator doc_it = documents->begin(); doc_it != documents->end(); ++doc_it){
+                DocumentOccurrence* document = it->second;
+                index_file << ' ' << document->get_id() << ' ' << document->get_occurrencies();
+                std::vector<int>* positions = document->get_positions();
+                for(std::vector<int>::iterator position = positions->begin(); position != positions->end(); ++position){
+                    index_file << ' ' << *position;
+                }
+            }
+            index_file << '\n';
+        }
+        index_file.close();
+    }
+
+    void Crawler::load_index(){
+        // 
+    }
+
 }

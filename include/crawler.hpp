@@ -15,6 +15,7 @@
 
 #define MAX_THREADS 50
 #define HTML_PATH "./output/html/"
+#define INDEX_PATH "./output/index.idx"
 #define THREADS_LOG_PATH "./output/threads.log"
 #define ERROR_LOG_PATH "./output/error.log"
 
@@ -48,6 +49,9 @@ namespace web_crawler {
             void join_tasks();
             void crawl();
             void report();
+            void build_index();
+            void save_index();
+            void load_index();
     };
 
 }

@@ -10,11 +10,14 @@ namespace web_crawler {
     class IndexCell {
         private:
             std::string term;
-            double ni;
-            std::map<int, DocumentOccurrence*> documents;
+            int ni;
+            std::map<int, DocumentOccurrence*>* documents;
 
         public:
             IndexCell(std::string term);
+            std::string get_term();
+            int get_ni();
+            std::map<int, DocumentOccurrence*>* get_documents();
             void addDocument(int document_id, int position);
     };
 }
