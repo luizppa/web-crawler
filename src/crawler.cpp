@@ -241,7 +241,7 @@ namespace web_crawler {
             index_file << cell->get_term() << ' ' << cell->get_ni();
             std::map<int, DocumentOccurrence*>* documents = cell->get_documents();
             for(std::map<int, DocumentOccurrence*>::iterator doc_it = documents->begin(); doc_it != documents->end(); ++doc_it){
-                DocumentOccurrence* document = it->second;
+                DocumentOccurrence* document = doc_it->second;
                 index_file << ' ' << document->get_id() << ' ' << document->get_occurrencies();
                 std::vector<int>* positions = document->get_positions();
                 for(std::vector<int>::iterator position = positions->begin(); position != positions->end(); ++position){
