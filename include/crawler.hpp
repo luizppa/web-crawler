@@ -8,6 +8,7 @@
 #include<thread>
 #include<fstream>
 #include<mutex>
+#include<gumbo.h>
 
 #include"./scheduler.hpp"
 #include"./record.hpp"
@@ -38,6 +39,8 @@ namespace web_crawler {
             void queue_if_unvisited(std::string url);
             void start_task();
             static void crawl_url(Crawler* crawler);
+            static std::string cleantext(GumboNode* node);
+            static std::string html_text(std::string file_path);
 
         public:
             Crawler(const char* seed_file_path, int pages_to_collect);

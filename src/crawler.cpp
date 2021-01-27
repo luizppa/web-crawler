@@ -231,7 +231,7 @@ namespace web_crawler {
     }
 
     void Crawler::build_index(){
-        // 
+        
     }
 
     void Crawler::save_index(){
@@ -255,6 +255,47 @@ namespace web_crawler {
 
     void Crawler::load_index(){
         // 
+    }
+
+    std::string Crawler::cleantext(GumboNode* node){
+        if(node->type == GUMBO_NODE_TEXT){
+            return std::string(node->v.text.text);
+        }
+        else if(node->type == GUMBO_NODE_ELEMENT && node->v.element.tag != GUMBO_TAG_SCRIPT && node->v.element.tag != GUMBO_TAG_STYLE){
+            GumboVector* children = &node->v.element.children;
+            std::string contents = "";
+
+            for(unsigned int i = 0; i < children->length; ++i){
+                const std::string text = cleantext((GumboNode*) children->data[i]);
+                if(i != 0 && !text.empty()){
+                    contents.append(" ");
+                }
+                contents.append(text);
+            }
+            return contents;
+        } 
+        else {
+            return "";
+        }
+    }
+
+    std::string Crawler::html_text(std::string file_path){
+        std::ifstream in(file_path, std::ios::in | std::ios::binary);
+        if (!in){
+            throw std::string("File not found!");
+        }
+
+        std::string contents;
+        in.seekg(0, std::ios::end);
+        contents.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&contents[0], contents.size());
+        in.close();
+
+        GumboOutput* output = gumbo_parse(contents.c_str());
+        std::string text = cleantext(output->root);
+        gumbo_destroy_output(&kGumboDefaultOptions, output);
+        return text;
     }
 
 }
