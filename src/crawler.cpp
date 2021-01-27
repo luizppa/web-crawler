@@ -231,7 +231,20 @@ namespace web_crawler {
     }
 
     void Crawler::build_index(){
-        
+        for(int i = 1; i <= this->pages_to_collect; i++){
+            std::stringstream file_name;
+            file_name << HTML_PATH << i << ".html";
+            try{
+                std::istringstream file_content(Crawler::html_text(file_name.str()));
+                std::string word;
+                while(file_content >> word){
+                    // each word
+                }
+            }
+            catch(...){
+                std::cout << "erro" << std::endl;
+            }
+        }
     }
 
     void Crawler::save_index(){
