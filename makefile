@@ -21,6 +21,12 @@ $(BUILD_PATH)/%.o: $(SOURCE_PATH)/%.cpp $(LIB_PATH)/%.hpp
 $(TARGET_NAME): $(OBJECTS) ./main.cpp
 	$(CC) $(CFLAGS) -o $(TARGET_PATH) ./main.cpp $(OBJECTS) $(CLIBS)
 
+install:
+	cd ./third_party/gumbo-parser-0.10.1/ && ./autogen.sh
+	cd ./third_party/gumbo-parser-0.10.1/ && ./configure
+	cd ./third_party/gumbo-parser-0.10.1/ && make
+	cd ./third_party/gumbo-parser-0.10.1/ && make install
+
 clean:
 	rm -rf $(BUILD_PATH)/*
 
