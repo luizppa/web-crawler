@@ -13,6 +13,8 @@ int main(int argc, char* const argv[]){
     crawler->crawl();
     crawler->report();
     crawler->join_tasks();
+    crawler->build_index();
+    crawler->save_index();
     delete crawler;
     return 0;
 }

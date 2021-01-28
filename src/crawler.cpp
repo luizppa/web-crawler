@@ -10,6 +10,7 @@
 #include<map>
 #include<thread>
 #include<ctime>
+#include<algorithm>
 #include<unistd.h>
 
 #include "../include/crawler.hpp"
@@ -17,6 +18,7 @@
 
 namespace web_crawler {
     Crawler::Crawler(const char* seed_file_path, int pages_to_collect){
+        this->dictionary = new std::map<std::string, IndexCell*>();
         this->threads_log.open(THREADS_LOG_PATH);
         std::ifstream input_file;
         input_file.open(seed_file_path);
@@ -230,26 +232,41 @@ namespace web_crawler {
         std::cout << average_time_in_seconds << " in average per page\n\n";
     }
 
+    void Crawler::add_to_dictionary(std::string word, int document, int position){
+        IndexCell* dictionary_entry;
+        if(this->dictionary->find(word) == this->dictionary->end()){
+            dictionary_entry = new IndexCell(word);
+            this->dictionary->insert(std::pair<std::string, IndexCell*>(word, dictionary_entry));
+        }
+        else{
+            dictionary_entry = this->dictionary->at(word);
+        }
+        dictionary_entry->add_occurence(document, position);
+    }
+
     void Crawler::build_index(){
         for(int i = 1; i <= this->pages_to_collect; i++){
             std::stringstream file_name;
+            int position = 0;
             file_name << HTML_PATH << i << ".html";
             try{
                 std::istringstream file_content(Crawler::html_text(file_name.str()));
                 std::string word;
                 while(file_content >> word){
-                    // each word
+                    std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+                    this->add_to_dictionary(word, i, position);
+                    position++;
                 }
             }
             catch(...){
-                std::cout << "erro" << std::endl;
+                continue;
             }
         }
     }
 
     void Crawler::save_index(){
         std::ofstream index_file(INDEX_PATH);
-        for(std::map<std::string, IndexCell*>::iterator it = this->dictionary.begin(); it != this->dictionary.end(); ++it){
+        for(std::map<std::string, IndexCell*>::iterator it = this->dictionary->begin(); it != this->dictionary->end(); ++it){
             IndexCell* cell = it->second;
             index_file << cell->get_term() << ' ' << cell->get_ni();
             std::map<int, DocumentOccurrence*>* documents = cell->get_documents();

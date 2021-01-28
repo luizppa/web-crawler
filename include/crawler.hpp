@@ -33,12 +33,13 @@ namespace web_crawler {
             std::map<std::string, Record*> registry;
             Scheduler scheduler;
             std::ofstream threads_log;
-            std::map<std::string, IndexCell*> dictionary;
+            std::map<std::string, IndexCell*>* dictionary;
 
             std::string get_next_url();
             void queue_if_unvisited(std::string url);
             void start_task();
             static void crawl_url(Crawler* crawler);
+            void add_to_dictionary(std::string word, int document, int position);
             static std::string cleantext(GumboNode* node);
             static std::string html_text(std::string file_path);
 

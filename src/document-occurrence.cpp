@@ -5,6 +5,10 @@ namespace web_crawler{
         this->document_id = document_id;
         this->positions = new std::vector<int>();
     }
+    
+    DocumentOccurrence::~DocumentOccurrence(){
+        delete this->positions;
+    }
 
     int DocumentOccurrence::get_id(){
         return this->document_id;
