@@ -13,7 +13,7 @@ $ sudo make install
 $ make
 ```
 
-This will install [Gumbo Parser](https://github.com/google/gumbo-parser) and build the project, creating an executable file within ```build/```. To run the application, you can either run ```make run``` (to run with sample inputs) or use ```./build/web-crawler [PATH_TO_SEED_FILE]``` replacing ```[PATH_TO_SEED_FILE]``` with the path to the file containing your seeds. Your seed file should be a list of urls where the crawler will start visiting separated with line breaks like:
+This will install [Gumbo Parser](https://github.com/google/gumbo-parser) and build the project (you may need to run ```sudo ldconfig``` afterwards), creating an executable file within ```build/```. To run the application, you can either run ```make run``` (to run with sample inputs) or use ```./build/web-crawler [PATH_TO_SEED_FILE]``` replacing ```[PATH_TO_SEED_FILE]``` with the path to the file containing your seeds. Your seed file should be a list of urls where the crawler will start visiting separated with line breaks like:
 
 ```
 ufmg.br
