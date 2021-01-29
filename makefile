@@ -31,10 +31,11 @@ clean:
 	rm -rf $(BUILD_PATH)/*
 
 run:
-	$(TARGET_PATH) ./input/seed > ./output/crawler.log
+	$(TARGET_PATH) -c ./input/seed -b > ./output/crawler.log
 
 reset:
 	rm -rf ./output/*.log
+	rm -rf ./output/*.idx
 	rm -rf ./output/html/*.html
 
 mem:
