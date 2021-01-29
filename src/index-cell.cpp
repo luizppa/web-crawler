@@ -6,7 +6,6 @@ namespace web_crawler{
         this->term = term;
         this->documents = new std::map<int, DocumentOccurrence*>();
     }
-
     
     IndexCell::~IndexCell(){
         delete this->documents;

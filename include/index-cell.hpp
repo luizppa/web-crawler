@@ -7,10 +7,11 @@
 #include"./document-occurrence.hpp"
 
 namespace web_crawler {
+
     class IndexCell {
         private:
             std::string term;
-            int ni;
+            int ni = 0;
             std::map<int, DocumentOccurrence*>* documents;
 
         public:

@@ -15,6 +15,7 @@
 
 #include "../include/crawler.hpp"
 #include "../include/record.hpp"
+#include "../include/term-sanitizer.hpp"
 
 namespace web_crawler {
     Crawler::Crawler(const char* seed_file_path, int pages_to_collect){
@@ -245,7 +246,7 @@ namespace web_crawler {
     }
 
     void Crawler::build_index(){
-        for(int i = 1; i <= this->pages_to_collect; i++){
+        for(int i = 1; i <= 10; i++){
             std::stringstream file_name;
             int position = 0;
             file_name << HTML_PATH << i << ".html";
@@ -254,8 +255,11 @@ namespace web_crawler {
                 std::string word;
                 while(file_content >> word){
                     std::transform(word.begin(), word.end(), word.begin(), ::tolower);
-                    this->add_to_dictionary(word, i, position);
-                    position++;
+                    word = TermSanitizer::sanitize(word);
+                    if(word.size() > 0){
+                        this->add_to_dictionary(word, i, position);
+                        position++;
+                    }
                 }
             }
             catch(...){
