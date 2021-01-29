@@ -1,5 +1,4 @@
 #include<sstream>
-#include<iostream>
 #include<codecvt>
 #include <locale>
 #include<algorithm>
@@ -31,9 +30,6 @@ namespace web_crawler {
     }
 
     char TermSanitizer::map(wchar_t c, const std::pair<std::pair<int, int>, char> intervals[], int n){
-        if(c >= 160){
-            std::cout << c;
-        }
         for(int i = 0; i < n; i++){
             if(TermSanitizer::char_is_in(c, intervals[i].first)){
                 return intervals[i].second;

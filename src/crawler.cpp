@@ -17,20 +17,9 @@
 #include "../include/term-sanitizer.hpp"
 
 namespace web_crawler {
-    Crawler::Crawler(const char* seed_file_path, int pages_to_collect){
+    Crawler::Crawler(){
         this->dictionary = new std::map<std::string, IndexCell*>();
         this->threads_log.open(THREADS_LOG_PATH);
-        std::ifstream input_file;
-        input_file.open(seed_file_path);
-        if(input_file.is_open()){
-            std::string url;
-            while(!input_file.eof()){
-                input_file  >> url;
-                this->seed_urls.push_back(url);
-            }
-            input_file.close();
-            this->pages_to_collect = pages_to_collect;
-        }
     }
 
     Crawler::~Crawler(){
@@ -188,7 +177,19 @@ namespace web_crawler {
         error_log.close();
     }
 
-    void Crawler::crawl(){
+    void Crawler::crawl(const char* seed_file_path, int pages_to_collect){
+        std::ifstream input_file;
+        input_file.open(seed_file_path);
+        if(input_file.is_open()){
+            std::string url;
+            while(!input_file.eof()){
+                input_file  >> url;
+                this->seed_urls.push_back(url);
+            }
+            input_file.close();
+            this->pages_to_collect = pages_to_collect;
+        }
+
         for(std::vector<std::string>::iterator it = this->seed_urls.begin(); it != this->seed_urls.end(); ++it){
             this->queue_if_unvisited(*it);
         }
@@ -197,7 +198,7 @@ namespace web_crawler {
             this->start_task();
             
             while(this->max_threads_reached()  && !this->finished()){
-                usleep(100000);
+                usleep(10000);
             }
         }
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -244,11 +245,12 @@ namespace web_crawler {
         dictionary_entry->add_occurence(document, position);
     }
 
-    void Crawler::build_index(){
-        for(int i = 1; i <= 10; i++){
+    void Crawler::build_index(int pages_to_index){
+        for(int i = 1; i <= pages_to_index; i++){
             std::stringstream file_name;
             int position = 0;
             file_name << HTML_PATH << i << ".html";
+            std::cout << "Building index for " << file_name.str() << "...\t";
             try{
                 std::istringstream file_content(Crawler::html_text(file_name.str()));
                 std::string word;
@@ -259,8 +261,35 @@ namespace web_crawler {
                         position++;
                     }
                 }
+                std::cout << "done\n";
             }
             catch(...){
+                std::cout << "failed\n";
+                continue;
+            }
+        }
+    }
+
+    void Crawler::build_index(const char* html_path, int pages_to_index){
+        for(int i = 1; i <= pages_to_index; i++){
+            std::stringstream file_name;
+            int position = 0;
+            file_name << html_path << i << ".html";
+            std::cout << "Building index for " << file_name.str() << "...\t";
+            try{
+                std::istringstream file_content(Crawler::html_text(file_name.str()));
+                std::string word;
+                while(file_content >> word){
+                    word = TermSanitizer::sanitize(word);
+                    if(word.size() > 0){
+                        this->add_to_dictionary(word, i, position);
+                        position++;
+                    }
+                }
+                std::cout << "done\n";
+            }
+            catch(...){
+                std::cout << "failed\n";
                 continue;
             }
         }

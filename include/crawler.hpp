@@ -44,16 +44,17 @@ namespace web_crawler {
             static std::string html_text(std::string file_path);
 
         public:
-            Crawler(const char* seed_file_path, int pages_to_collect);
+            Crawler();
             ~Crawler();
             bool finished();
             bool waiting_tasks();
             bool processing_tasks();
             bool max_threads_reached();
             void join_tasks();
-            void crawl();
+            void crawl(const char* seed_file_path, int pages_to_collect);
             void report();
-            void build_index();
+            void build_index(int pages_to_index);
+            void build_index(const char* html_path, int pages_to_index);
             void save_index();
             void load_index();
     };
