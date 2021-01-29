@@ -28,6 +28,8 @@ The available options are:
 * ```-c [SEED_FILE]``` replacing ```[SEED_FILE]``` with the path to the file containing your seeds, see [examples](#example).
 * ```-b [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default, the collection path will be ```output/html/```.
 
+> *Be cautious when building an index for a large collection as it will require a lot of RAM, an index for 100000 documents can consume over 5GB.*
+
 ## Example
 
 Your seed file should be a list of urls where the crawler will start visiting separated with line breaks like:
