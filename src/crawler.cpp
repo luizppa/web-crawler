@@ -10,7 +10,6 @@
 #include<map>
 #include<thread>
 #include<ctime>
-#include<algorithm>
 #include<unistd.h>
 
 #include "../include/crawler.hpp"
@@ -254,7 +253,6 @@ namespace web_crawler {
                 std::istringstream file_content(Crawler::html_text(file_name.str()));
                 std::string word;
                 while(file_content >> word){
-                    std::transform(word.begin(), word.end(), word.begin(), ::tolower);
                     word = TermSanitizer::sanitize(word);
                     if(word.size() > 0){
                         this->add_to_dictionary(word, i, position);
