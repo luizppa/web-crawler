@@ -21,6 +21,15 @@ namespace web_crawler {
         return (c >= interval.first && c <= interval.second);
     }
 
+    wchar_t TermSanitizer::shift(wchar_t c, const std::pair<std::pair<int, int>, int> intervals[], int n){
+        for(int i = 0; i < n; i++){
+            if(TermSanitizer::char_is_in(c, intervals[i].first)){
+                return (c + intervals[i].second);
+            }
+        }
+        return c;
+    }
+
     char TermSanitizer::map(wchar_t c, const std::pair<std::pair<int, int>, char> intervals[], int n){
         if(c >= 160){
             std::cout << c;
@@ -40,16 +49,17 @@ namespace web_crawler {
     }
 
     std::string TermSanitizer::sanitize(std::string term){
-        std::transform(term.begin(), term.end(), term.begin(), ::tolower);
         std::wstring ws_term = TermSanitizer::to_wstring(term);
         std::stringstream stream;
         std::wstring::iterator it = ws_term.begin();
         while(it != ws_term.end()){
             if(!TermSanitizer::char_is_in(*it, TermSanitizer::exclude_intervals, EXCLUDE_INTERVALS_SIZE)){
-                stream << TermSanitizer::map(*it, TermSanitizer::mapings, MAPINGS_SIZE);
+                wchar_t shifted = TermSanitizer::shift(*it, TermSanitizer::shift_intervals, SHIFT_INTERVALS_SIZE);
+                stream << TermSanitizer::map(shifted, TermSanitizer::mapings, MAPINGS_SIZE);
             }
             ++it;
         }
         return stream.str();
+        return term;
     }
 }
