@@ -1,6 +1,6 @@
 # Web Crawler
 
-This is web crawler build with [Chilkat's CkSpider](https://www.chilkatsoft.com/) and [Gumbo Parser](https://github.com/google/gumbo-parser). The program will collect a given number of web pages anb build an index for information retrieval over that collection. The default number of pages the crawler will try to visit before halting is 100000 (one hundred thousand), then it will create an index for 5000 (five thousand) of those, you can change this values by modifying the ```PAGES_TO_COLLECT``` and ```PAGES_TO_INDEX``` constants located in ```main.cpp```.
+This is a web crawler built with [Chilkat's CkSpider](https://www.chilkatsoft.com/) and [Gumbo Parser](https://github.com/google/gumbo-parser). The program will collect a given number of web pages anb build an index for information retrieval over that collection. The default number of pages the crawler will try to visit before halting is 100000 (one hundred thousand), then it will create an index for 5000 (five thousand) of those, you can change this values by modifying the ```PAGES_TO_COLLECT``` and ```PAGES_TO_INDEX``` constants located in ```main.cpp```.
 
 * [Installing](#installing)
 * [Usage](#usage)
@@ -26,7 +26,9 @@ To run the application, you can either use ```make run``` (to run with sample in
 The available options are:
 
 * ```-c [SEED_FILE]``` replacing ```[SEED_FILE]``` with the path to the file containing your seeds, see [examples](#example).
-* ```-b [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default, the collection path will be ```output/html/```.
+* ```-b [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default the collection path will be ```output/html/```.
+
+> *Be cautious when building an index for a large collection as it will require a lot of RAM, an index for 100000 documents can consume over 5GB.*
 
 ## Example
 
