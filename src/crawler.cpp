@@ -231,6 +231,15 @@ namespace web_crawler {
 
         std::cout << "\nCrawled " << total_pages << " in " << ((float)this->milliseconds)/1000.0 << " seconds (" << MAX_THREADS << " simultaneous processes)\n";
         std::cout << average_time_in_seconds << " in average per page\n\n";
+
+        std::cout << this->dictionary->size() << " words in dictionary\n";
+        int word_occurrences = 0;
+        for(std::map<std::string, IndexCell*>::iterator it = this->dictionary->begin(); it != this->dictionary->end(); ++it){
+            IndexCell* index = it->second;
+            word_occurrences += index->get_ni();
+        }
+        double list_average_size = ((float)word_occurrences)/((float)this->dictionary->size());
+        std::cout << "Index entry average size: " << list_average_size << " occurrences\n";
     }
 
     void Crawler::add_to_dictionary(std::string word, int document, int position){

@@ -5,8 +5,7 @@
 #define PAGES_TO_COLLECT 100000
 #define PAGES_TO_INDEX 5000
 
-void run(int argc, char* const argv[]){
-    web_crawler::Crawler* crawler = new web_crawler::Crawler();
+void run(web_crawler::Crawler* crawler, int argc, char* const argv[]){
     int i = 1;
     while(i < argc){
         if(argv[i][0] == '-'){
@@ -16,7 +15,6 @@ void run(int argc, char* const argv[]){
                     if(argc > i + 1 && argv[i+1][0] != '-'){
                         crawler->crawl(argv[i+1], PAGES_TO_COLLECT);
                         crawler->join_tasks();
-                        crawler->report();
                         i++;
                     }
                     else {
@@ -50,7 +48,6 @@ void run(int argc, char* const argv[]){
         }
         i++;
     }
-    delete crawler;
 }
 
 int main(int argc, char* const argv[]){
@@ -58,6 +55,9 @@ int main(int argc, char* const argv[]){
         std::cout << "Not enough arguments" << std::endl;
         return 1;
     }
-    run(argc, argv);
+    web_crawler::Crawler* crawler = new web_crawler::Crawler();
+    run(crawler, argc, argv);
+    crawler->report();
+    delete crawler;
     return 0;
 }
