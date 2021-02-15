@@ -38,8 +38,9 @@ namespace web_crawler {
             std::string get_next_url();
             void queue_if_unvisited(std::string url);
             void start_task();
-            static void crawl_url(Crawler* crawler);
             void add_to_dictionary(std::string word, int document, int position);
+            void load_index(std::ifstream& index_file);
+            static void crawl_url(Crawler* crawler);
             static std::string cleantext(GumboNode* node);
             static std::string html_text(std::string file_path);
 
@@ -56,7 +57,8 @@ namespace web_crawler {
             void build_index(int pages_to_index);
             void build_index(const char* html_path, int pages_to_index);
             void save_index();
-            void load_index();
+            void load_index(std::string file_path);
+            void load_index(const char* file_path);
     };
 
 }

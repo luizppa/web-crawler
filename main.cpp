@@ -35,7 +35,13 @@ void run(web_crawler::Crawler* crawler, int argc, char* const argv[]){
                     break;
 
                 case 'l':
-                    crawler->load_index();
+                    if(argc > i + 1 && argv[i+1][0] != '-'){
+                        crawler->load_index(argv[i+1]);
+                        i++;
+                    }
+                    else {
+                        crawler->load_index(INDEX_PATH);
+                    }
                     break;
                 
                 default:

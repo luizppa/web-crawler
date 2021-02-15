@@ -323,8 +323,31 @@ namespace web_crawler {
         index_file.close();
     }
 
-    void Crawler::load_index(){
-        // 
+    void Crawler::load_index(std::ifstream& index_file){
+        std::string word;
+        while(std::getline(index_file, word, ' ')){
+            int ni;
+            index_file >> ni;
+            for(int i = 0; i < ni; i++){
+                int document_id, document_occurrences;
+                index_file >> document_id >> document_occurrences;;
+                for(int j = 0; j < document_occurrences; j++){
+                    int position;
+                    index_file >> position;
+                    this->add_to_dictionary(word, document_id, position);
+                }
+            }
+        }
+    }
+
+    void Crawler::load_index(const char* file_path){
+        std::ifstream index_file = std::ifstream(file_path);
+        this->load_index(index_file);
+    }
+
+    void Crawler::load_index(std::string file_path){
+        std::ifstream index_file = std::ifstream(file_path);
+        this->load_index(index_file);
     }
 
     std::string Crawler::cleantext(GumboNode* node){
