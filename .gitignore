@@ -4,3 +4,5 @@ build/*
 output/**/*.log
 output/**/*.idx
 output/**/*.html
+output/**/*.jl
+output/**/*.json
