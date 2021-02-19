@@ -58,4 +58,17 @@ namespace web_crawler {
         return stream.str();
         return term;
     }
+
+    std::string TermSanitizer::replace_all(std::string string, char a, std::string b){
+        std::stringstream stream;
+        for(std::string::iterator it = string.begin(); it != string.end(); ++it){
+            if(*it == a){
+                stream << b;
+            }
+            else{
+                stream << *it;
+            }
+        }
+        return stream.str();
+    }
 }

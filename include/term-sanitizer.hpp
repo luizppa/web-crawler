@@ -4,7 +4,7 @@
 #include<string>
 #include<utility>
 
-#define EXCLUDE_INTERVALS_SIZE 5
+#define EXCLUDE_INTERVALS_SIZE 6
 #define MAPINGS_SIZE 26
 #define SHIFT_INTERVALS_SIZE 3
 
@@ -13,11 +13,12 @@ namespace web_crawler {
     class TermSanitizer {
         private:
             static constexpr std::pair<int, int> exclude_intervals[EXCLUDE_INTERVALS_SIZE] = {
-                std::pair<int, int>(0x0021, 0x002F),
+                std::pair<int, int>(0x0000, 0x002F),
                 std::pair<int, int>(0x003A, 0x0040),
                 std::pair<int, int>(0x005B, 0x0060),
                 std::pair<int, int>(0x007B, 0x00BF),
-                std::pair<int, int>(0x02B9, 0x036F)
+                std::pair<int, int>(0x02B9, 0x036F),
+                std::pair<int, int>(0x017F, 0x10FFFF)
             };
             static constexpr std::pair<std::pair<int, int>, char> mapings[MAPINGS_SIZE] = {
                 std::pair<std::pair<int, int>, char>(std::pair<int, int>(0x00E0, 0x00E6), 'a'),
@@ -60,6 +61,7 @@ namespace web_crawler {
 
         public:
             static std::string sanitize(std::string term);
+            static std::string replace_all(std::string string, char a, std::string b);
     };
 }
 

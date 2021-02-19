@@ -11,7 +11,9 @@
 #include<thread>
 #include<ctime>
 #include<unistd.h>
+#include <algorithm>
 
+#include "../third_party/nlohmann/json.hpp"
 #include "../include/crawler.hpp"
 #include "../include/record.hpp"
 #include "../include/term-sanitizer.hpp"
@@ -84,6 +86,15 @@ namespace web_crawler {
         this->tasks.push_back(thread);
     }
 
+    void Crawler::save_document(std::string url, std::string html_content){
+        std::ofstream html_collection(COLLECTION_PATH, std::ios_base::app);
+        nlohmann::json document_json;
+        document_json["url"] = url;
+        document_json["html_content"] = TermSanitizer::replace_all(html_content, '\n', " ");
+        html_collection << document_json << '\n';
+        html_collection.close();
+    }
+
     void Crawler::join_tasks(){
         std::vector<std::thread*>::iterator it = this->tasks.begin();
         while(it != this->tasks.end()){
@@ -143,12 +154,7 @@ namespace web_crawler {
                             crawler->registry[registry_entry]->visit_page(url, time);
                             crawler->visited_pages++;
                             std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl() << "\n\n";
-                            std::stringstream html_path;
-                            html_path << HTML_PATH << crawler->visited_pages << ".html";
-                            std::ofstream html(html_path.str());
-                            html << "<!--" << spider.lastUrl() << "-->\n";
-                            html << spider.lastHtml();
-                            html.close();
+                            crawler->save_document(std::string(spider.lastUrl()), std::string(spider.lastHtml()));
                             crawler->mutex.unlock();
 
                             for(int i = 0; i < spider.get_NumOutboundLinks(); i++){
@@ -255,13 +261,15 @@ namespace web_crawler {
     }
 
     void Crawler::build_index(int pages_to_index){
-        for(int i = 1; i <= pages_to_index; i++){
-            std::stringstream file_name;
+        std::ifstream index(COLLECTION_PATH);
+        std::string line;
+        for(int i = 0; i < pages_to_index && std::getline(index, line); i++){
             int position = 0;
-            file_name << HTML_PATH << i << ".html";
-            std::cout << "Building index for " << file_name.str() << "...\t";
+            std::cout << "Building index for " << i+1 << "th page...\t";
+            nlohmann::json document_json = nlohmann::json::parse(line);
+            std::cout << document_json["url"] << "\n";
             try{
-                std::istringstream file_content(Crawler::html_text(file_name.str()));
+                std::istringstream file_content(Crawler::html_text(document_json["html_content"]));
                 std::string word;
                 while(file_content >> word){
                     word = TermSanitizer::sanitize(word);
@@ -372,20 +380,8 @@ namespace web_crawler {
         }
     }
 
-    std::string Crawler::html_text(std::string file_path){
-        std::ifstream in(file_path, std::ios::in | std::ios::binary);
-        if (!in){
-            throw std::string("File not found!");
-        }
-
-        std::string contents;
-        in.seekg(0, std::ios::end);
-        contents.resize(in.tellg());
-        in.seekg(0, std::ios::beg);
-        in.read(&contents[0], contents.size());
-        in.close();
-
-        GumboOutput* output = gumbo_parse(contents.c_str());
+    std::string Crawler::html_text(std::string html){
+        GumboOutput* output = gumbo_parse(html.c_str());
         std::string text = cleantext(output->root);
         gumbo_destroy_output(&kGumboDefaultOptions, output);
         return text;
