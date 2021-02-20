@@ -8,15 +8,12 @@
 #include<thread>
 #include<fstream>
 #include<mutex>
-#include<gumbo.h>
 
 #include"./scheduler.hpp"
 #include"./record.hpp"
-#include"./index-cell.hpp"
 
 #define MAX_THREADS 50
 #define COLLECTION_PATH "./output/collection.jl"
-#define INDEX_PATH "./output/index.idx"
 #define THREADS_LOG_PATH "./output/threads.log"
 #define ERROR_LOG_PATH "./output/error.log"
 
@@ -33,17 +30,12 @@ namespace web_crawler {
             std::map<std::string, Record*> registry;
             Scheduler scheduler;
             std::ofstream threads_log;
-            std::map<std::string, IndexCell*>* dictionary;
 
             std::string get_next_url();
             void queue_if_unvisited(std::string url);
             void start_task();
             void save_document(std::string url, std::string html_content);
-            void add_to_dictionary(std::string word, int document, int position);
-            void load_index(std::ifstream& index_file);
             static void crawl_url(Crawler* crawler);
-            static std::string cleantext(GumboNode* node);
-            static std::string html_text(std::string html);
 
         public:
             Crawler();
@@ -55,11 +47,6 @@ namespace web_crawler {
             void join_tasks();
             void crawl(const char* seed_file_path, int pages_to_collect);
             void report();
-            void build_index(int pages_to_index);
-            void build_index(const char* html_path, int pages_to_index);
-            void save_index();
-            void load_index(std::string file_path);
-            void load_index(const char* file_path);
     };
 
 }

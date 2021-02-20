@@ -71,4 +71,33 @@ namespace web_crawler {
         }
         return stream.str();
     }
+
+    std::string TermSanitizer::clean_text(GumboNode* node){
+        if(node->type == GUMBO_NODE_TEXT){
+            return std::string(node->v.text.text);
+        }
+        else if(node->type == GUMBO_NODE_ELEMENT && node->v.element.tag != GUMBO_TAG_SCRIPT && node->v.element.tag != GUMBO_TAG_STYLE){
+            GumboVector* children = &node->v.element.children;
+            std::string contents = "";
+
+            for(unsigned int i = 0; i < children->length; ++i){
+                const std::string text = TermSanitizer::clean_text((GumboNode*) children->data[i]);
+                if(i != 0 && !text.empty()){
+                    contents.append(" ");
+                }
+                contents.append(text);
+            }
+            return contents;
+        } 
+        else {
+            return "";
+        }
+    }
+
+    std::string TermSanitizer::html_text(std::string html){
+        GumboOutput* output = gumbo_parse(html.c_str());
+        std::string text = TermSanitizer::clean_text(output->root);
+        gumbo_destroy_output(&kGumboDefaultOptions, output);
+        return text;
+    }
 }

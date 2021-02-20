@@ -3,6 +3,7 @@
 
 #include<string>
 #include<utility>
+#include<gumbo.h>
 
 #define EXCLUDE_INTERVALS_SIZE 6
 #define MAPINGS_SIZE 26
@@ -58,10 +59,12 @@ namespace web_crawler {
             static wchar_t shift(wchar_t c, const std::pair<std::pair<int, int>, int> intervals[], int n);
             static char map(wchar_t c, const std::pair<std::pair<int, int>, char> intervals[], int n);
             static std::wstring to_wstring(std::string str);
+            static std::string clean_text(GumboNode* node);
 
         public:
             static std::string sanitize(std::string term);
             static std::string replace_all(std::string string, char a, std::string b);
+            static std::string html_text(std::string html);
     };
 }
 
