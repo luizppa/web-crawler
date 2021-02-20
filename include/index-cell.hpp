@@ -17,10 +17,13 @@ namespace web_crawler {
         public:
             IndexCell(std::string term);
             ~IndexCell();
-            std::string get_term();
             int get_ni();
-            std::map<int, DocumentOccurrence*>* get_documents();
             void add_occurence(int document_id, int position);
+            void merge(IndexCell* cell);
+            std::map<int, DocumentOccurrence*>* get_documents();
+            std::string get_term();
+            std::string dump();
+            static IndexCell* load(std::string index_entry);
     };
 }
 

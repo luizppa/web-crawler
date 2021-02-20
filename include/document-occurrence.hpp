@@ -16,7 +16,7 @@ namespace web_crawler {
             int get_id();
             int get_occurrencies();
             std::vector<int>* get_positions();
-            void addOccurence(int position);
+            void add_occurence(int position);
 
     };
 }

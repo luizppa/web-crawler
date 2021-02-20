@@ -22,7 +22,7 @@ namespace web_crawler{
         return this->positions;
     }
 
-    void DocumentOccurrence::addOccurence(int position){
+    void DocumentOccurrence::add_occurence(int position){
         this->positions->push_back(position);
         this->occurrencies++;
     }
