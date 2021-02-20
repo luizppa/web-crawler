@@ -5,6 +5,7 @@
 #include<vector>
 #include<map>
 #include<cstdio>
+#include<chrono>
 
 #include "../include/term-sanitizer.hpp"
 #include "../include/indexer.hpp"
@@ -33,40 +34,67 @@ namespace web_crawler {
     }
     
     void Indexer::index(){
-        int i;
+        int i, seconds;
         std::ifstream collection_file(COLLECTION_PATH);
+        std::chrono::_V2::system_clock::time_point end_time, start_time;
+
+        start_time = std::chrono::high_resolution_clock::now();
+
         for(i = 0; !collection_file.eof(); i++){
             this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
         }
+
+        end_time = std::chrono::high_resolution_clock::now();
+        seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        std::cout << "Built " << i << " indexes in " << seconds << " seconds, preparing to merge...\n";
+
         this->merge(i);
+        
         for(int j = 0; j < i; j++){
             std::stringstream tmp_file_name;
             tmp_file_name << TEMP_OUTPUT_FOLDER << j << "-index.tmp";
             std::remove(tmp_file_name.str().c_str());
         }
+        
+        end_time = std::chrono::high_resolution_clock::now();
+        seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        std::cout << "Total indexing time: " << seconds << " seconds \n";
     }
 
     void Indexer::index(const char* collection_path){
-        int i;
+        int i, seconds;
         std::ifstream collection_file(collection_path);
+        std::chrono::_V2::system_clock::time_point end_time, start_time;
+
+        start_time = std::chrono::high_resolution_clock::now();
+
         for(i = 0; !collection_file.eof(); i++){
             this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
         }
+
+        end_time = std::chrono::high_resolution_clock::now();
+        seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        std::cout << "Built " << i << " indexes in " << seconds << " seconds, preparing to merge...\n";
+
         this->merge(i);
+
         for(int j = 0; j < i; j++){
             std::stringstream tmp_file_name;
             tmp_file_name << TEMP_OUTPUT_FOLDER << j << "-index.tmp";
             std::remove(tmp_file_name.str().c_str());
         }
+        
+        end_time = std::chrono::high_resolution_clock::now();
+        seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        std::cout << "Total indexing time: " << seconds << " seconds \n";
     }
     
     void Indexer::build_index(std::ifstream& collection_file, int pages_to_index, int iteration){
         std::string line;
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
-            std::cout << "Building index for " << (pages_to_index*iteration)+i+1 << "th page...\t";
             nlohmann::json document_json = nlohmann::json::parse(line);
-            std::cout << document_json["url"] << "\n";
+            std::cout << "Building index for (" << (pages_to_index*iteration)+i+1 << ") " << document_json["url"] << "...\t";
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_json["html_content"]));
                 std::string word;
@@ -111,8 +139,11 @@ namespace web_crawler {
         std::string index_line;
         std::vector<std::ifstream*>::iterator it;
         IndexCell* cell;
+        
+        auto start_time = std::chrono::high_resolution_clock::now();
 
         /* Initializes files vector and first index cells */
+        std::cout << "Merging indexes...\t";
         for(int i = 0; i < indexes_number; i++){
             std::stringstream file_name;
             file_name << TEMP_OUTPUT_FOLDER << i << "-index.tmp";
@@ -175,6 +206,10 @@ namespace web_crawler {
             index_file->close();
             delete index_file;
         }
+        std::cout << "done!\n";
+        auto end_time = std::chrono::high_resolution_clock::now();
+        int seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        std::cout << "Merged " << indexes_number << " indexes in " << seconds << " seconds.\n";
     }
 
     void Indexer::load_index(std::ifstream& index_file){

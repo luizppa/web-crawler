@@ -9,7 +9,7 @@
 #define COLLECTION_PATH "./output/collection.jl"
 #define INDEX_PATH "./output/index.idx"
 #define TEMP_OUTPUT_FOLDER "./output/"
-#define MAX_DOCUMENTS_PER_BATCH 3
+#define MAX_DOCUMENTS_PER_BATCH 16384
 
 namespace web_crawler {
 
