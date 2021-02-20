@@ -84,8 +84,13 @@ namespace web_crawler {
                 continue;
             }
         }
-        this->save_index(iteration);
-        this->dictionary->clear();
+        if(!this->dictionary->empty()){
+            this->save_index(iteration);
+            for(std::map<std::string, IndexCell*>::iterator it = this->dictionary->begin(); it != this->dictionary->end(); ++it){
+                delete it->second;
+            }
+            this->dictionary->clear();
+        }
     }
 
     void Indexer::save_index(int iteration){
@@ -107,7 +112,7 @@ namespace web_crawler {
         std::vector<std::ifstream*>::iterator it;
         IndexCell* cell;
 
-        // Initializes files vector and first index cells
+        /* Initializes files vector and first index cells */
         for(int i = 0; i < indexes_number; i++){
             std::stringstream file_name;
             file_name << TEMP_OUTPUT_FOLDER << i << "-index.tmp";
@@ -135,7 +140,7 @@ namespace web_crawler {
             }
         }
         
-        // Read, merges and saves index cells
+        /* Read, merges and saves index cells */
         std::pair<std::vector<int>, IndexCell*> pair;
         while(!cells.empty()){
             pair = cells.begin()->second;
@@ -163,7 +168,7 @@ namespace web_crawler {
             }
         }
 
-        // Close files
+        /* Close files */
         output_file.close();
         for(it = files.begin(); it != files.end(); ++it){
             std::ifstream* index_file = *it;

@@ -10,6 +10,10 @@ namespace web_crawler{
     }
     
     IndexCell::~IndexCell(){
+        std::map<int, DocumentOccurrence*>::iterator it;
+        for(it = this->documents->begin(); it != this->documents->end(); ++it){
+            delete it->second;
+        }
         delete this->documents;
     }
 
