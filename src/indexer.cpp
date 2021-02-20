@@ -2,6 +2,9 @@
 #include<iostream>
 #include<string>
 #include<sstream>
+#include<vector>
+#include<map>
+#include<cstdio>
 
 #include "../include/term-sanitizer.hpp"
 #include "../include/indexer.hpp"
@@ -30,16 +33,30 @@ namespace web_crawler {
     }
     
     void Indexer::index(){
+        int i;
         std::ifstream collection_file(COLLECTION_PATH);
-        for(int i = 0; !collection_file.eof(); i++){
+        for(i = 0; !collection_file.eof(); i++){
             this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
+        }
+        this->merge(i);
+        for(int j = 0; j < i; j++){
+            std::stringstream tmp_file_name;
+            tmp_file_name << TEMP_OUTPUT_FOLDER << j << "-index.tmp";
+            std::remove(tmp_file_name.str().c_str());
         }
     }
 
     void Indexer::index(const char* collection_path){
+        int i;
         std::ifstream collection_file(collection_path);
-        for(int i = 0; !collection_file.eof(); i++){
+        for(i = 0; !collection_file.eof(); i++){
             this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
+        }
+        this->merge(i);
+        for(int j = 0; j < i; j++){
+            std::stringstream tmp_file_name;
+            tmp_file_name << TEMP_OUTPUT_FOLDER << j << "-index.tmp";
+            std::remove(tmp_file_name.str().c_str());
         }
     }
     
@@ -77,19 +94,82 @@ namespace web_crawler {
         std::ofstream index_file(output_file_name.str());
         for(std::map<std::string, IndexCell*>::iterator it = this->dictionary->begin(); it != this->dictionary->end(); ++it){
             IndexCell* cell = it->second;
-            index_file << cell->get_term() << ' ' << cell->get_ni();
-            std::map<int, DocumentOccurrence*>* documents = cell->get_documents();
-            for(std::map<int, DocumentOccurrence*>::iterator doc_it = documents->begin(); doc_it != documents->end(); ++doc_it){
-                DocumentOccurrence* document = doc_it->second;
-                index_file << ' ' << document->get_id() << ' ' << document->get_occurrencies();
-                std::vector<int>* positions = document->get_positions();
-                for(std::vector<int>::iterator position = positions->begin(); position != positions->end(); ++position){
-                    index_file << ' ' << *position;
-                }
-            }
-            index_file << '\n';
+            index_file << cell->dump() << '\n';
         }
         index_file.close();
+    }
+
+    void Indexer::merge(int indexes_number){
+        std::map<std::string, std::pair<std::vector<int>, IndexCell*>> cells;
+        std::vector<std::ifstream*> files;
+        std::ofstream output_file(INDEX_PATH);
+        std::string index_line;
+        std::vector<std::ifstream*>::iterator it;
+        IndexCell* cell;
+
+        // Initializes files vector and first index cells
+        for(int i = 0; i < indexes_number; i++){
+            std::stringstream file_name;
+            file_name << TEMP_OUTPUT_FOLDER << i << "-index.tmp";
+            std::ifstream* index_file = new std::ifstream(file_name.str());
+            if(index_file->is_open() && std::getline(*index_file, index_line, '\n')){
+                files.push_back(index_file);
+                cell = IndexCell::load(index_line);
+                if(cells.find(cell->get_term()) == cells.end()){
+                    std::vector<int> documents;
+                    documents.push_back(i);
+                    cells[cell->get_term()] = std::pair<std::vector<int>, IndexCell*>(documents, cell);
+                }
+                else{
+                    std::vector<int> documents = cells[cell->get_term()].first;
+                    documents.push_back(i);
+                    cells[cell->get_term()].second->merge(cell);
+                    delete cell;
+                }
+            }
+            else if(index_file->is_open()){
+                index_file->close();
+            }
+            else if (index_file != nullptr){
+                delete index_file;
+            }
+        }
+        
+        // Read, merges and saves index cells
+        std::pair<std::vector<int>, IndexCell*> pair;
+        while(!cells.empty()){
+            pair = cells.begin()->second;
+            std::vector<int> documents_to_consume = pair.first;
+            cell = pair.second;
+            output_file << cell->dump() << '\n';
+            delete cell;
+            cells.erase(cells.begin());
+            std::vector<int>::iterator document;
+            for(document = documents_to_consume.begin(); document != documents_to_consume.end(); ++document){
+                if(std::getline(*files.at(*document), index_line, '\n')){
+                    cell = IndexCell::load(index_line);
+                    if(cells.find(cell->get_term()) == cells.end()){
+                        std::vector<int> documents;
+                        documents.push_back(*document);
+                        cells[cell->get_term()] = std::pair<std::vector<int>, IndexCell*>(documents, cell);
+                    }
+                    else{
+                        std::vector<int> documents = cells[cell->get_term()].first;
+                        documents.push_back(*document);
+                        cells[cell->get_term()].second->merge(cell);
+                        delete cell;
+                    }
+                }
+            }
+        }
+
+        // Close files
+        output_file.close();
+        for(it = files.begin(); it != files.end(); ++it){
+            std::ifstream* index_file = *it;
+            index_file->close();
+            delete index_file;
+        }
     }
 
     void Indexer::load_index(std::ifstream& index_file){

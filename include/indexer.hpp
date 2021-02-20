@@ -25,6 +25,7 @@ namespace web_crawler {
             void index();
             void index(const char* collection_path);
             void build_index(std::ifstream& collection_file, int pages_to_index, int iteration);
+            void merge(int indexes_number);
             void save_index(int iteration);
             void load_index(std::string file_path);
             void load_index(const char* file_path);
