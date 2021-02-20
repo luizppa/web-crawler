@@ -4,7 +4,6 @@
 #include "./include/indexer.hpp"
 
 #define PAGES_TO_COLLECT 100000
-#define PAGES_TO_INDEX 5000
 
 void run(web_crawler::Crawler* crawler, web_crawler::Indexer* indexer, int argc, char* const argv[]){
     int i = 1;
@@ -25,13 +24,11 @@ void run(web_crawler::Crawler* crawler, web_crawler::Indexer* indexer, int argc,
 
                 case 'b':
                     if(argc > i + 1 && argv[i+1][0] != '-'){
-                        indexer->build_index(argv[i+1], PAGES_TO_INDEX);
-                        indexer->save_index();
+                        indexer->index(argv[i+1]);
                         i++;
                     }
                     else {
-                        indexer->build_index(PAGES_TO_INDEX);
-                        indexer->save_index();
+                        indexer->index();
                     }
                     break;
 

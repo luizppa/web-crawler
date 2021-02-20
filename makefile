@@ -15,7 +15,7 @@ OBJECTS := $(patsubst $(SOURCE_PATH)/%,$(BUILD_PATH)/%,$(SOURCES:.$(SOURCE_EXT)=
 all: $(TARGET_NAME)
 
 $(BUILD_PATH)/%.o: $(SOURCE_PATH)/%.cpp $(LIB_PATH)/%.hpp
-	mkdir -p $(BUILD_PATH)
+	mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) -o $@ $< $(CLIBS)
 
 $(TARGET_NAME): $(OBJECTS) ./main.cpp
@@ -36,7 +36,8 @@ run:
 reset:
 	rm -rf ./output/*.log
 	rm -rf ./output/*.idx
-	rm -rf ./output/html/*.html
+	rm -rf ./output/*.jl
+	rm -rf ./output/*.tmp
 
 mem:
 	valgrind --leak-check=full --show-leak-kinds=all --log-file="./output/mem.log" --max-threads=100 $(TARGET_PATH) ./input/seed > ./output/crawler.log

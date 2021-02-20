@@ -6,3 +6,4 @@ output/**/*.idx
 output/**/*.html
 output/**/*.jl
 output/**/*.json
+output/**/*.tmp

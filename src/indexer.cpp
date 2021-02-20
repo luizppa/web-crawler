@@ -28,13 +28,26 @@ namespace web_crawler {
         }
         dictionary_entry->add_occurence(document, position);
     }
+    
+    void Indexer::index(){
+        std::ifstream collection_file(COLLECTION_PATH);
+        for(int i = 0; !collection_file.eof(); i++){
+            this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
+        }
+    }
 
-    void Indexer::build_index(int pages_to_index){
-        std::ifstream index(COLLECTION_PATH);
+    void Indexer::index(const char* collection_path){
+        std::ifstream collection_file(collection_path);
+        for(int i = 0; !collection_file.eof(); i++){
+            this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
+        }
+    }
+    
+    void Indexer::build_index(std::ifstream& collection_file, int pages_to_index, int iteration){
         std::string line;
-        for(int i = 0; i < pages_to_index && std::getline(index, line); i++){
+        for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
-            std::cout << "Building index for " << i+1 << "th page...\t";
+            std::cout << "Building index for " << (pages_to_index*iteration)+i+1 << "th page...\t";
             nlohmann::json document_json = nlohmann::json::parse(line);
             std::cout << document_json["url"] << "\n";
             try{
@@ -54,35 +67,14 @@ namespace web_crawler {
                 continue;
             }
         }
+        this->save_index(iteration);
+        this->dictionary->clear();
     }
 
-    void Indexer::build_index(const char* html_path, int pages_to_index){
-        for(int i = 1; i <= pages_to_index; i++){
-            std::stringstream file_name;
-            int position = 0;
-            file_name << html_path << i << ".html";
-            std::cout << "Building index for " << file_name.str() << "...\t";
-            try{
-                std::istringstream file_content(TermSanitizer::html_text(file_name.str()));
-                std::string word;
-                while(file_content >> word){
-                    word = TermSanitizer::sanitize(word);
-                    if(word.size() > 0){
-                        this->add_to_dictionary(word, i, position);
-                        position++;
-                    }
-                }
-                std::cout << "done\n";
-            }
-            catch(...){
-                std::cout << "failed\n";
-                continue;
-            }
-        }
-    }
-
-    void Indexer::save_index(){
-        std::ofstream index_file(INDEX_PATH);
+    void Indexer::save_index(int iteration){
+        std::stringstream output_file_name;
+        output_file_name << TEMP_OUTPUT_FOLDER << iteration << "-index.tmp";
+        std::ofstream index_file(output_file_name.str());
         for(std::map<std::string, IndexCell*>::iterator it = this->dictionary->begin(); it != this->dictionary->end(); ++it){
             IndexCell* cell = it->second;
             index_file << cell->get_term() << ' ' << cell->get_ni();
