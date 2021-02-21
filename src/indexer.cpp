@@ -94,14 +94,14 @@ namespace web_crawler {
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
             nlohmann::json document_json = nlohmann::json::parse(line);
-            std::cout << "Building index for (" << (pages_to_index*iteration)+i+1 << ") " << document_json["url"] << "...\t";
+            std::cout << "Building index for (" << (pages_to_index*iteration)+i << ") " << document_json["url"] << "...\t";
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_json["html_content"]));
                 std::string word;
                 while(file_content >> word){
                     word = TermSanitizer::sanitize(word);
                     if(word.size() > 0){
-                        this->add_to_dictionary(word, i, position);
+                        this->add_to_dictionary(word, (pages_to_index*iteration)+i, position);
                         position++;
                     }
                 }
@@ -157,8 +157,7 @@ namespace web_crawler {
                     cells[cell->get_term()] = std::pair<std::vector<int>, IndexCell*>(documents, cell);
                 }
                 else{
-                    std::vector<int> documents = cells[cell->get_term()].first;
-                    documents.push_back(i);
+                    cells[cell->get_term()].first.push_back(i);
                     cells[cell->get_term()].second->merge(cell);
                     delete cell;
                 }
@@ -190,8 +189,7 @@ namespace web_crawler {
                         cells[cell->get_term()] = std::pair<std::vector<int>, IndexCell*>(documents, cell);
                     }
                     else{
-                        std::vector<int> documents = cells[cell->get_term()].first;
-                        documents.push_back(*document);
+                        cells[cell->get_term()].first.push_back(*document);
                         cells[cell->get_term()].second->merge(cell);
                         delete cell;
                     }
