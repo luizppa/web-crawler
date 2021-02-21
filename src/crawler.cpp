@@ -140,32 +140,34 @@ namespace web_crawler {
             if(success){
                 int links_number = spider.get_NumUnspidered();
                 spider.SleepMs(100);
-                for(int i = 0; i < links_number; i++){
+                for(int i = 0; i < links_number && !crawler->finished(); i++){
                     auto start_time = std::chrono::high_resolution_clock::now();
                     success = spider.CrawlNext();
                     auto end_time = std::chrono::high_resolution_clock::now();
                     int time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-                    if(crawler->finished()){
-                        break;
-                    }
-                    else if(success){
-                            crawler->mutex.lock();
+                    if(success){
+                        crawler->mutex.lock();
+                        if(!crawler->finished()){
                             crawler->registry[registry_entry]->visit_page(url, time);
                             crawler->visited_pages++;
                             std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl() << "\n\n";
                             crawler->save_document(std::string(spider.lastUrl()), std::string(spider.lastHtml()));
-                            crawler->mutex.unlock();
+                        }
+                        else{
+                            break;
+                        }
+                        crawler->mutex.unlock();
 
-                            for(int i = 0; i < spider.get_NumOutboundLinks(); i++){
-                                try{
-                                    std::string url = std::string(spider.getOutboundLink(i));
-                                    crawler->queue_if_unvisited(url);
-                                }
-                                catch(...){
-                                    error_log << "Can't resolve domain for: " << spider.getOutboundLink(i) << "\n" << std::endl;
-                                }
+                        for(int i = 0; i < spider.get_NumOutboundLinks() && !crawler->finished(); i++){
+                            try{
+                                std::string url = std::string(spider.getOutboundLink(i));
+                                crawler->queue_if_unvisited(url);
                             }
-                            spider.ClearOutboundLinks();
+                            catch(...){
+                                error_log << "Can't resolve domain for: " << spider.getOutboundLink(i) << "\n" << std::endl;
+                            }
+                        }
+                        spider.ClearOutboundLinks();
                     }
                     else{
                         error_log << spider.lastErrorText() << '\n';
