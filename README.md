@@ -53,3 +53,10 @@ www.cnnbrasil.com.br
 disney.com.br
 en.wikipedia.org
 ```
+
+The output collection will be formated as below (as should also be input collections):
+
+```
+{"url": "www.document1.com", "html_content": "<html> document 1's html content... </html>"}
+{"url": "www.document2.com", "html_content": "<html> document 2's html content... </html>"}
+```
