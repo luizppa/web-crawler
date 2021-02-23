@@ -1,9 +1,5 @@
 build/*
 !build/.gitkeep
 
-output/**/*.log
-output/**/*.idx
-output/**/*.html
-output/**/*.jl
-output/**/*.json
-output/**/*.tmp
+output/**/*
+!output/.gitkeep
