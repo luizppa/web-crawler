@@ -1,6 +1,6 @@
 # Web Crawler
 
-This is a web crawler built with [Chilkat's CkSpider](https://www.chilkatsoft.com/), [Gumbo Parser](https://github.com/google/gumbo-parser) and [Niels Lohmann's brilliant JSON library](https://github.com/nlohmann/json). The program will collect a given number of web pages anb build an index for information retrieval over that collection. The default number of pages the crawler will try to visit before halting is 100000 (one hundred thousand), then it will create an index for those. You can change this value by modifying the ```PAGES_TO_COLLECT``` constant located in ```main.cpp```.
+This is a web crawler built with [Chilkat's CkSpider](https://www.chilkatsoft.com/), [Gumbo Parser](https://github.com/google/gumbo-parser) and [Niels Lohmann's brilliant JSON library](https://github.com/nlohmann/json). The program will collect a given number of web pages anb build an index for information retrieval over that collection. The default number of pages the crawler will try to visit before halting is 100000 (one hundred thousand). You can change this value by modifying the ```PAGES_TO_COLLECT``` constant located in ```main.cpp```.
 
 * [Installing](#installing)
 * [Usage](#usage)
