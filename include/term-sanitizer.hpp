@@ -9,7 +9,7 @@
 #define MAPINGS_SIZE 26
 #define SHIFT_INTERVALS_SIZE 3
 
-namespace web_crawler {
+namespace search_engine {
 
     class TermSanitizer {
         private:

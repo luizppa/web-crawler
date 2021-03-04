@@ -4,7 +4,7 @@
 #include<string>
 #include<map>
 
-namespace web_crawler {
+namespace search_engine {
     class Record {
 
         private:

@@ -4,7 +4,7 @@
 #include<queue>
 #include<mutex>
 
-namespace web_crawler {
+namespace search_engine {
 
     class Scheduler {
         private:

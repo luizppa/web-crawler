@@ -5,7 +5,7 @@
 
 #include"../include/term-sanitizer.hpp"
 
-namespace web_crawler {
+namespace search_engine {
 
     bool TermSanitizer::char_is_in(wchar_t c, const std::pair<int, int> intervals[], int n){
         for(int i = 0; i < n; i++){

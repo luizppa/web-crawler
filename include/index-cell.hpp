@@ -6,7 +6,7 @@
 
 #include"./document-occurrence.hpp"
 
-namespace web_crawler {
+namespace search_engine {
 
     class IndexCell {
         private:
@@ -24,6 +24,7 @@ namespace web_crawler {
             std::string get_term();
             std::string dump();
             static IndexCell* load(std::string index_entry);
+            static IndexCell* load(std::string index_entry, int max_documents);
     };
 }
 

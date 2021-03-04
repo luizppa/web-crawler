@@ -11,7 +11,7 @@
 #define TEMP_OUTPUT_FOLDER "./output/"
 #define MAX_DOCUMENTS_PER_BATCH 4096
 
-namespace web_crawler {
+namespace search_engine {
 
     class Indexer {
         private:

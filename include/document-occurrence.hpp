@@ -3,7 +3,7 @@
 
 #include<vector>
 
-namespace web_crawler {
+namespace search_engine {
     class DocumentOccurrence {
         private:
             int document_id;

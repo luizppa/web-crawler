@@ -5,7 +5,7 @@
 
 #include"../include/record.hpp"
 
-namespace web_crawler {
+namespace search_engine {
     Record::Record(std::string domain){
         this->domain = domain;
     }

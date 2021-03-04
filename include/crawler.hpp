@@ -17,7 +17,7 @@
 #define THREADS_LOG_PATH "./output/threads.log"
 #define ERROR_LOG_PATH "./output/error.log"
 
-namespace web_crawler {
+namespace search_engine {
 
     class Crawler {
         private:

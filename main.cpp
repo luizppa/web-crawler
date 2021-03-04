@@ -2,10 +2,23 @@
 
 #include "./include/crawler.hpp"
 #include "./include/indexer.hpp"
+#include "./include/search.hpp"
 
-#define PAGES_TO_COLLECT 100000
+#define PAGES_TO_COLLECT 10
 
-void run(web_crawler::Crawler* crawler, web_crawler::Indexer* indexer, int argc, char* const argv[]){
+void query(char const* index_path, char const* collection_path){
+    std::string query_string;
+
+    std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\nquery: ";
+    while(std::getline(std::cin, query_string, '\n')){
+        std::cout << '\n';
+        search_engine::search(query_string, index_path, collection_path);
+        std::cout << "query: ";
+    }
+    std::cout << '\n';
+}
+
+void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int argc, char* const argv[]){
     int i = 1;
     while(i < argc){
         if(argv[i][0] == '-'){
@@ -15,6 +28,7 @@ void run(web_crawler::Crawler* crawler, web_crawler::Indexer* indexer, int argc,
                     if(argc > i + 1 && argv[i+1][0] != '-'){
                         crawler->crawl(argv[i+1], PAGES_TO_COLLECT);
                         crawler->join_tasks();
+                        crawler->report();
                         i++;
                     }
                     else {
@@ -35,10 +49,26 @@ void run(web_crawler::Crawler* crawler, web_crawler::Indexer* indexer, int argc,
                 case 'l':
                     if(argc > i + 1 && argv[i+1][0] != '-'){
                         indexer->load_index(argv[i+1]);
+                        indexer->report();
                         i++;
                     }
                     else {
                         indexer->load_index(INDEX_PATH);
+                        indexer->report();
+                    }
+                    break;
+
+                case 'q':
+                    if(argc > i + 2 && argv[i+1][0] != '-' && argv[i+2][0] != '-'){   
+                        query(argv[i+1], argv[i+2]);
+                        i += 2;
+                    }
+                    else if(argc > i + 2 && argv[i+1][0] != '-'){
+                        query(argv[i+1], COLLECTION_PATH);
+                        i++;
+                    }
+                    else{
+                        query(INDEX_PATH, COLLECTION_PATH);
                     }
                     break;
                 
@@ -60,12 +90,10 @@ int main(int argc, char* const argv[]){
         return 1;
     }
 
-    web_crawler::Crawler* crawler = new web_crawler::Crawler();
-    web_crawler::Indexer* indexer = new web_crawler::Indexer();
+    search_engine::Crawler* crawler = new search_engine::Crawler();
+    search_engine::Indexer* indexer = new search_engine::Indexer();
 
     run(crawler, indexer, argc, argv);
-    crawler->report();
-    indexer->report();
 
     delete crawler;
     delete indexer;

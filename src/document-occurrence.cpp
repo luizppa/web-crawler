@@ -1,6 +1,6 @@
 #include"../include/document-occurrence.hpp"
 
-namespace web_crawler{
+namespace search_engine{
     DocumentOccurrence::DocumentOccurrence(int document_id){
         this->document_id = document_id;
         this->positions = new std::vector<int>();

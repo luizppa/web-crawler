@@ -1,9 +1,10 @@
 #include<sstream>
+#include<iostream>
 
 #include"../include/index-cell.hpp"
 #include"../include/document-occurrence.hpp"
 
-namespace web_crawler{
+namespace search_engine{
     IndexCell::IndexCell(std::string term){
         this->term = term;
         this->documents = new std::map<int, DocumentOccurrence*>();
@@ -80,6 +81,28 @@ namespace web_crawler{
 
         std::getline(stream, word, ' ');
         stream >> ni;
+
+        IndexCell* cell = new IndexCell(word);
+        for(int i = 0; i < ni; i++){
+            int document_id, document_occurrences;
+            stream >> document_id >> document_occurrences;
+            for(int j = 0; j < document_occurrences; j++){
+                int position;
+                stream >> position;
+                cell->add_occurence(document_id, position);
+            }
+        }
+        return cell;
+    }
+
+    IndexCell* IndexCell::load(std::string index_entry, int max_documents){
+        std::stringstream stream(index_entry);
+        std::string word;
+        int ni;
+
+        std::getline(stream, word, ' ');
+        stream >> ni;
+        ni = ni < max_documents ? ni : max_documents;
 
         IndexCell* cell = new IndexCell(word);
         for(int i = 0; i < ni; i++){

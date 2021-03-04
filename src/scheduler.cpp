@@ -3,7 +3,7 @@
 
 #include"../include/scheduler.hpp"
 
-namespace web_crawler {
+namespace search_engine {
     Scheduler::Scheduler(){}
 
     int Scheduler::size() {

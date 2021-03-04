@@ -11,7 +11,7 @@
 #include "../include/indexer.hpp"
 #include "../third_party/nlohmann/json.hpp"
  
-namespace web_crawler {
+namespace search_engine {
 
     Indexer::Indexer(){
         this->dictionary = new std::map<std::string, IndexCell*>();

@@ -18,7 +18,7 @@
 #include "../include/record.hpp"
 #include "../include/term-sanitizer.hpp"
 
-namespace web_crawler {
+namespace search_engine {
     Crawler::Crawler(){
         this->threads_log.open(THREADS_LOG_PATH);
     }
