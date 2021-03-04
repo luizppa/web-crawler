@@ -1,6 +1,6 @@
-# Web Crawler
+# Gugol
 
-This is a web crawler built with [Chilkat's CkSpider](https://www.chilkatsoft.com/), [Gumbo Parser](https://github.com/google/gumbo-parser) and [Niels Lohmann's brilliant JSON library](https://github.com/nlohmann/json). The program will collect a given number of web pages anb build an index for information retrieval over that collection. The default number of pages the crawler will try to visit before halting is 100000 (one hundred thousand). You can change this value by modifying the ```PAGES_TO_COLLECT``` constant located in ```main.cpp```.
+This is a simplified search engine built with [Chilkat's CkSpider](https://www.chilkatsoft.com/), [Gumbo Parser](https://github.com/google/gumbo-parser) and [Niels Lohmann's brilliant JSON library](https://github.com/nlohmann/json). The fostware will collect a given number of web pages anb build an index for information retrieval over that collection. The default number of pages the crawler will try to visit before halting is 100000 (one hundred thousand). You can change this value by modifying the ```PAGES_TO_COLLECT``` constant located in ```main.cpp```.
 
 * [Installing](#installing)
 * [Usage](#usage)
@@ -21,12 +21,14 @@ This will install [Gumbo Parser](https://github.com/google/gumbo-parser) and bui
 
 ## Usage
 
-To run the application, you can either use ```make run``` (to run with sample inputs, this will automaticaly crawl for some pages with a predefined seed at ```input/seed``` and build the index for a few of those pages) or use ```./build/web-crawler``` with custom options.
+To run the application, you can either use ```make run``` (to run with sample inputs, this will automaticaly crawl with a predefined seed at ```input/seed``` and build the index for those pages) or use ```./build/web-crawler``` with custom options.
 
 The available options are:
 
-* ```-c [SEED_FILE]``` replacing ```[SEED_FILE]``` with the path to the file containing your seeds, see [examples](#example).
-* ```-b [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default the collection path will be ```output/collection.jl```.
+* ```-c [SEED_FILE]``` replacing ```[SEED_FILE]``` with the path to the file containing your seeds, see [examples](#example). This will start the crawling process with ```[SEED_FILE]``` as seed.
+* ```-b [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default the collection path will be ```output/collection.jl```. This will build an index for the documents present at ```[COLLECTION_PATH]``` and output the index (.idx) file at ```output/```.
+* ```-l [INDEX_PATH]``` which will load the index file at ```[INDEX_PATH]``` to memory (carefull there).
+* ```-q [INDEX_PATH] [COLLECTION_PATH]``` where both ```[INDEX_PATH]``` and ```[COLLECTION_PATH]``` are optional, however, if ```[COLLECTION_PATH]``` is provided, so should be ```[INDEX_PATH]```. This will open the query CLI for searching documents (still in early development). 
 
 The documents on the collection are indexed in batches, by default, the maximum batch size is 4096, defined in ```include/indexer.hpp```. If the batch size is too big, the application will consume a large amount of RAM, however, if it is overly small, the execution time and disk usage may increase. On [this document](https://github.com/LuizPPA/web-crawler/blob/master/docs/Information_Retrieval_Assignment_4.pdf) is presented a chart roughly illustrating how memory consumption escalates with batch size.
 
