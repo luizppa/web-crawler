@@ -185,7 +185,7 @@ namespace search_engine {
             pair = cells.begin()->second;
             std::vector<int> documents_to_consume = pair.first;
             cell = pair.second;
-            output_file << cell->dump() << '\n';
+            output_file << cell->sort_dump() << '\n';
             delete cell;
             cells.erase(cells.begin());
             std::vector<int>::iterator document;

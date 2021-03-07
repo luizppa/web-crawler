@@ -23,6 +23,7 @@ namespace search_engine {
             std::map<int, DocumentOccurrence*>* get_documents();
             std::string get_term();
             std::string dump();
+            std::string sort_dump();
             static IndexCell* load(std::string index_entry);
             static IndexCell* load(std::string index_entry, int max_documents);
     };

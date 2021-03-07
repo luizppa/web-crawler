@@ -26,4 +26,8 @@ namespace search_engine{
         this->positions->push_back(position);
         this->occurrencies++;
     }
+
+    bool DocumentOccurrence::compare(DocumentOccurrence* a, DocumentOccurrence* b){
+        return a->get_occurrencies() > b->get_occurrencies();
+    }
 }

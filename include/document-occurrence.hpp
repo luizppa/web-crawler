@@ -17,6 +17,7 @@ namespace search_engine {
             int get_occurrencies();
             std::vector<int>* get_positions();
             void add_occurence(int position);
+            static bool compare(DocumentOccurrence* a, DocumentOccurrence* b);
 
     };
 }

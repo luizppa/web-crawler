@@ -1,5 +1,6 @@
 #include<sstream>
 #include<iostream>
+#include<algorithm>
 
 #include"../include/index-cell.hpp"
 #include"../include/document-occurrence.hpp"
@@ -65,6 +66,29 @@ namespace search_engine{
         std::map<int, DocumentOccurrence*>::iterator it;
         for(it = documents->begin(); it != documents->end(); ++it){
             DocumentOccurrence* document = it->second;
+            output_stream << ' ' << document->get_id() << ' ' << document->get_occurrencies();
+            std::vector<int>* positions = document->get_positions();
+            for(std::vector<int>::iterator position = positions->begin(); position != positions->end(); ++position){
+                output_stream << ' ' << *position;
+            }
+        }
+        return output_stream.str();
+    }
+
+    std::string IndexCell::sort_dump(){
+        std::stringstream output_stream;
+        output_stream << this->get_term() << ' ' << this->get_ni();
+        std::map<int, DocumentOccurrence*>* documents = this->get_documents();
+        std::map<int, DocumentOccurrence*>::iterator map_it;
+        std::vector<DocumentOccurrence*>::iterator vector_it;
+        std::vector<DocumentOccurrence*> documents_vector;
+        for(map_it = documents->begin(); map_it != documents->end(); ++map_it){
+            documents_vector.push_back(map_it->second);
+        }
+        std::sort(documents_vector.begin(), documents_vector.end(), DocumentOccurrence::compare);
+
+        for(vector_it = documents_vector.begin(); vector_it != documents_vector.end(); ++vector_it){
+            DocumentOccurrence* document = *vector_it;
             output_stream << ' ' << document->get_id() << ' ' << document->get_occurrencies();
             std::vector<int>* positions = document->get_positions();
             for(std::vector<int>::iterator position = positions->begin(); position != positions->end(); ++position){
