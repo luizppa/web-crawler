@@ -36,13 +36,23 @@ void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int a
                     }
                     break;
 
-                case 'b':
+                case 'i':
                     if(argc > i + 1 && argv[i+1][0] != '-'){
                         indexer->index(argv[i+1]);
                         i++;
                     }
                     else {
                         indexer->index();
+                    }
+                    break;
+
+                case 'b':
+                    if(argc > i + 1 && argv[i+1][0] != '-'){
+                        indexer->build_brief(argv[i+1]);
+                        i++;
+                    }
+                    else {
+                        indexer->build_brief();
                     }
                     break;
 
@@ -64,11 +74,11 @@ void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int a
                         i += 2;
                     }
                     else if(argc > i + 2 && argv[i+1][0] != '-'){
-                        query(argv[i+1], COLLECTION_PATH);
+                        query(argv[i+1], BRIEFING_PATH);
                         i++;
                     }
                     else{
-                        query(INDEX_PATH, COLLECTION_PATH);
+                        query(INDEX_PATH, BRIEFING_PATH);
                     }
                     break;
                 

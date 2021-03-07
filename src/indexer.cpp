@@ -36,12 +36,13 @@ namespace search_engine {
     void Indexer::index(){
         int i, seconds;
         std::ifstream collection_file(COLLECTION_PATH);
+        std::ofstream collection_briefing_file(BRIEFING_PATH);
         std::chrono::_V2::system_clock::time_point end_time, start_time;
 
         start_time = std::chrono::high_resolution_clock::now();
 
         for(i = 0; !collection_file.eof(); i++){
-            this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
+            this->build_index(collection_file, collection_briefing_file, MAX_DOCUMENTS_PER_BATCH, i);
         }
 
         end_time = std::chrono::high_resolution_clock::now();
@@ -55,6 +56,8 @@ namespace search_engine {
             tmp_file_name << TEMP_OUTPUT_FOLDER << j << "-index.tmp";
             std::remove(tmp_file_name.str().c_str());
         }
+        collection_file.close();
+        collection_briefing_file.close();
         
         end_time = std::chrono::high_resolution_clock::now();
         seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
@@ -64,12 +67,13 @@ namespace search_engine {
     void Indexer::index(const char* collection_path){
         int i, seconds;
         std::ifstream collection_file(collection_path);
+        std::ofstream collection_briefing_file(BRIEFING_PATH);
         std::chrono::_V2::system_clock::time_point end_time, start_time;
 
         start_time = std::chrono::high_resolution_clock::now();
 
         for(i = 0; !collection_file.eof(); i++){
-            this->build_index(collection_file, MAX_DOCUMENTS_PER_BATCH, i);
+            this->build_index(collection_file, collection_briefing_file, MAX_DOCUMENTS_PER_BATCH, i);
         }
 
         end_time = std::chrono::high_resolution_clock::now();
@@ -83,20 +87,24 @@ namespace search_engine {
             tmp_file_name << TEMP_OUTPUT_FOLDER << j << "-index.tmp";
             std::remove(tmp_file_name.str().c_str());
         }
+        collection_file.close();
+        collection_briefing_file.close();
         
         end_time = std::chrono::high_resolution_clock::now();
         seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
         std::cout << "Total indexing time: " << seconds << " seconds \n";
     }
     
-    void Indexer::build_index(std::ifstream& collection_file, int pages_to_index, int iteration){
+    void Indexer::build_index(std::ifstream& collection_file, std::ofstream& collection_briefing_file, int pages_to_index, int iteration){
         std::string line;
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
             nlohmann::json document_json = nlohmann::json::parse(line);
-            std::cout << "Building index for (" << (pages_to_index*iteration)+i << ") " << document_json["url"] << "...\t";
+            std::cout << "(" << (pages_to_index*iteration)+i << ") Building index for " << document_json["url"] << "...\t";
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_json["html_content"]));
+                std::string briefing = file_content.str().substr(0,50);
+                collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_json["url"] << briefing << '\n';
                 std::string word;
                 while(file_content >> word){
                     word = TermSanitizer::sanitize(word);
@@ -208,6 +216,52 @@ namespace search_engine {
         auto end_time = std::chrono::high_resolution_clock::now();
         int seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
         std::cout << "Merged " << indexes_number << " indexes in " << seconds << " seconds.\n";
+    }
+
+    void Indexer::build_brief(){
+        std::ifstream collection_file(COLLECTION_PATH);
+        std::ofstream collection_briefing_file(BRIEFING_PATH);
+        std::string line;
+
+        for(int i = 0; std::getline(collection_file, line); i++){
+            nlohmann::json document_json = nlohmann::json::parse(line);
+            std::cout << "(" << i << ") Building brief for " << document_json["url"] << "...\t";
+            try{
+                std::string content = TermSanitizer::html_text(document_json["html_content"]).substr(0,50);
+                collection_briefing_file << i << ' ' << document_json["url"] << content << '\n';
+                std::cout << "DONE!\n";
+            }
+            catch(...){
+                std::cout << "FAILED!\n";
+                continue;
+            }
+        }
+
+        collection_file.close();
+        collection_briefing_file.close();
+    }
+
+    void Indexer::build_brief(const char* collection_path){
+        std::ifstream collection_file(collection_path);
+        std::ofstream collection_briefing_file(BRIEFING_PATH);
+        std::string line;
+
+        for(int i = 0; std::getline(collection_file, line); i++){
+            nlohmann::json document_json = nlohmann::json::parse(line);
+            std::cout << "(" << i << ") Building brief for " << document_json["url"] << "...\t";
+            try{
+                std::string content = TermSanitizer::html_text(document_json["html_content"]).substr(0,50);
+                collection_briefing_file << i << ' ' << document_json["url"] << content << '\n';
+                std::cout << "DONE!\n";
+            }
+            catch(...){
+                std::cout << "FAILED!\n";
+                continue;
+            }
+        }
+
+        collection_file.close();
+        collection_briefing_file.close();
     }
 
     void Indexer::load_index(std::ifstream& index_file){
