@@ -24,9 +24,10 @@ namespace search_engine {
         std::ifstream file(file_path, std::ios::binary);
         std::string term, file_entry;
         std::stringstream file_entry_stream;
-        long long int begin = 0, end, middle, last_middle = 0;
+        long long int begin = 0, end, middle = -1, last_middle = 0;
         file.seekg(0, std::ios::end);
         end = (long long int)file.tellg();
+        file.seekg(0, std::ios::beg);
 
         while(begin != end && middle != last_middle){
             last_middle = middle;
@@ -63,12 +64,15 @@ namespace search_engine {
     std::string file_binary_search(int search_value, std::string file_path){
         std::ifstream file(file_path, std::ios::binary);
         std::string file_entry;
+        int i = 0, value;
         std::stringstream file_entry_stream;
-        int value;
-        long long int begin = 0, end, middle, last_middle = 0;
+        long long int begin = 0, end, middle = -1, last_middle = 0;
         file.seekg(0, std::ios::end);
         end = (long long int)file.tellg();
+        file.seekg(0, std::ios::beg);
 
+        // std::cout << "Initial begin: " << begin << "\n";
+        // std::cout << "Initial end: " << end << "\n\n";
         while(begin != end && middle != last_middle){
             last_middle = middle;
             middle = (long long int)((begin+end)/2.0);
@@ -78,6 +82,10 @@ namespace search_engine {
             std::getline(file, file_entry, '\n');
             file_entry_stream.str(file_entry);
             file_entry_stream >> value;
+            // std::cout << "=================== Iteration " << i << " ===================\n";
+            // std::cout << "begin: " << begin << "\nend: " << end << "\nmiddle: " << middle << "\nvalue: " << value << "\n";
+            // std::cout << "line: " << file_entry;
+            // std::cout << "\n===================================================\n";
             if(value == search_value){
                 file.close();
                 return file_entry;
@@ -88,6 +96,7 @@ namespace search_engine {
             else{
                 begin = middle;
             }
+            i++;
         }
         file.close();
         return "";
@@ -120,7 +129,7 @@ namespace search_engine {
         std::getline(document_briefing_stream, id_str, ' ');
         std::getline(document_briefing_stream, url, ' ');
         std::getline(document_briefing_stream, briefing, '\n');
-        response_stream << '(' << id_str << ") " << url << '\n' << briefing;
+        response_stream << "\033[34m" << url << "\033[0m" << '\n' << briefing;
         return response_stream.str();
     }
 

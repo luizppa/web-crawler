@@ -56,6 +56,9 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "forward_list": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "bitset": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp"
     }
 }

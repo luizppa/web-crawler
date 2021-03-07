@@ -6,10 +6,11 @@
 #include<map>
 #include<cstdio>
 #include<chrono>
+#include<algorithm>
 
 #include "../include/term-sanitizer.hpp"
 #include "../include/indexer.hpp"
-#include "../third_party/nlohmann/json.hpp"
+#include "../include/json.hpp"
  
 namespace search_engine {
 
@@ -99,12 +100,12 @@ namespace search_engine {
         std::string line;
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
-            nlohmann::json document_json = nlohmann::json::parse(line);
-            std::cout << "(" << (pages_to_index*iteration)+i << ") Building index for " << document_json["url"] << "...\t";
+            std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
+            std::cout << "\033[34m" << (pages_to_index*iteration)+i << "\033[0m" << " Building index for " << document_data.first << "...\t";
             try{
-                std::istringstream file_content(TermSanitizer::html_text(document_json["html_content"]));
+                std::istringstream file_content(TermSanitizer::html_text(document_data.second));
                 std::string briefing = file_content.str().substr(0,50);
-                collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_json["url"] << briefing << '\n';
+                collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_data.first << briefing << '\n';
                 std::string word;
                 while(file_content >> word){
                     word = TermSanitizer::sanitize(word);
@@ -113,10 +114,10 @@ namespace search_engine {
                         position++;
                     }
                 }
-                std::cout << "done\n";
+                std::cout << "\033[32m" << "DONE!\n" << "\033[0m";
             }
             catch(...){
-                std::cout << "failed\n";
+                std::cout << "\033[31m" << "FAILED!\n" << "\033[0m";
                 continue;
             }
         }
@@ -220,45 +221,39 @@ namespace search_engine {
 
     void Indexer::build_brief(){
         std::ifstream collection_file(COLLECTION_PATH);
-        std::ofstream collection_briefing_file(BRIEFING_PATH);
-        std::string line;
-
-        for(int i = 0; std::getline(collection_file, line); i++){
-            nlohmann::json document_json = nlohmann::json::parse(line);
-            std::cout << "(" << i << ") Building brief for " << document_json["url"] << "...\t";
-            try{
-                std::string content = TermSanitizer::html_text(document_json["html_content"]).substr(0,50);
-                collection_briefing_file << i << ' ' << document_json["url"] << content << '\n';
-                std::cout << "DONE!\n";
-            }
-            catch(...){
-                std::cout << "FAILED!\n";
-                continue;
-            }
-        }
-
-        collection_file.close();
-        collection_briefing_file.close();
+        this->build_brief(collection_file);
     }
 
     void Indexer::build_brief(const char* collection_path){
         std::ifstream collection_file(collection_path);
+        this->build_brief(collection_file);
+    }
+
+    void Indexer::build_brief(std::ifstream& collection_file){
         std::ofstream collection_briefing_file(BRIEFING_PATH);
         std::string line;
+        auto start_time = std::chrono::high_resolution_clock::now();
+        int i;
 
-        for(int i = 0; std::getline(collection_file, line); i++){
-            nlohmann::json document_json = nlohmann::json::parse(line);
-            std::cout << "(" << i << ") Building brief for " << document_json["url"] << "...\t";
+        for(i = 0; std::getline(collection_file, line); i++){
+            std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
+            std::string url = document_data.first;
+            std::cout << "(" << i << ") Building brief for " << url << "...\t";
             try{
-                std::string content = TermSanitizer::html_text(document_json["html_content"]).substr(0,50);
-                collection_briefing_file << i << ' ' << document_json["url"] << content << '\n';
-                std::cout << "DONE!\n";
+                std::string content = TermSanitizer::html_text(document_data.second).substr(0,200);
+                content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
+                collection_briefing_file << i << ' ' << url << ' ' << content << "...\n";
+                std::cout << "\033[32m" << "DONE!\n" << "\033[0m";
             }
             catch(...){
-                std::cout << "FAILED!\n";
+                std::cout << "\033[31m" << "FAILED!\n" << "\033[0m";
                 continue;
             }
         }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        int seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+        std::cout << "With parse: processed " << i << " lines in " << seconds << " seconds.\n";
 
         collection_file.close();
         collection_briefing_file.close();

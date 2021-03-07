@@ -51,9 +51,9 @@ void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int a
                         indexer->build_brief(argv[i+1]);
                         i++;
                     }
-                    else {
-                        indexer->build_brief();
-                    }
+                    // else {
+                    //     indexer->build_brief();
+                    // }
                     break;
 
                 case 'l':

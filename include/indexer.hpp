@@ -19,6 +19,7 @@ namespace search_engine {
             std::map<std::string, IndexCell*>* dictionary;
             void add_to_dictionary(std::string word, int document, int position);
             void load_index(std::ifstream& index_file);
+            void build_brief(std::ifstream& collection_file);
 
         public:
             Indexer();
