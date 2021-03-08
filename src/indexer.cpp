@@ -105,6 +105,7 @@ namespace search_engine {
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_data.second));
                 std::string briefing = file_content.str().substr(0,50);
+                briefing.erase(std::remove(briefing.begin(), briefing.end(), '\n'), briefing.end());
                 collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_data.first << briefing << '\n';
                 std::string word;
                 while(file_content >> word){
@@ -213,7 +214,7 @@ namespace search_engine {
             index_file->close();
             delete index_file;
         }
-        std::cout << "done!\n";
+                std::cout << "\033[32m" << "DONE!\n" << "\033[0m";
         auto end_time = std::chrono::high_resolution_clock::now();
         int seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
         std::cout << "Merged " << indexes_number << " indexes in " << seconds << " seconds.\n";
@@ -238,7 +239,7 @@ namespace search_engine {
         for(i = 0; std::getline(collection_file, line); i++){
             std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
             std::string url = document_data.first;
-            std::cout << "(" << i << ") Building brief for " << url << "...\t";
+            std::cout << "\033[34m" << i << "\033[0m" << " Building brief for " << url << "...\t";
             try{
                 std::string content = TermSanitizer::html_text(document_data.second).substr(0,200);
                 content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());

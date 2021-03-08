@@ -6,6 +6,8 @@
 
 #include"./document-occurrence.hpp"
 
+#define COLLECTION_SIZE 1000068.0
+
 namespace search_engine {
 
     class IndexCell {
@@ -13,6 +15,8 @@ namespace search_engine {
             std::string term;
             int ni = 0;
             std::map<int, DocumentOccurrence*>* documents;
+            double tf(int frequency);
+            double idf();
 
         public:
             IndexCell(std::string term);
@@ -20,6 +24,8 @@ namespace search_engine {
             int get_ni();
             void add_occurence(int document_id, int position);
             void merge(IndexCell* cell);
+            double query_tf_idf(std::string query);
+            double document_tf_idf(int document_id);
             std::map<int, DocumentOccurrence*>* get_documents();
             std::string get_term();
             std::string dump();

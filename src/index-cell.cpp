@@ -1,6 +1,7 @@
 #include<sstream>
 #include<iostream>
 #include<algorithm>
+#include<cmath>
 
 #include"../include/index-cell.hpp"
 #include"../include/document-occurrence.hpp"
@@ -56,6 +57,41 @@ namespace search_engine{
             for(position = positions->begin(); position != positions->end(); ++position){
                 this->add_occurence(document->get_id(), *position);
             }
+        }
+    }
+
+    double IndexCell::tf(int frequency){
+        return (1.0 + log((double)frequency));
+    }
+
+    double IndexCell::idf(){
+        return log(COLLECTION_SIZE/(double)this->get_ni());
+    }
+
+    double IndexCell::query_tf_idf(std::string query){
+        std::stringstream query_stream(query);
+        std::string term;
+        int frequency = 0;
+        while(std::getline(query_stream, term, ' ')){
+            if(this->term.compare(term) == 0){
+                frequency++;
+            }
+        }
+        if(frequency > 0){
+            return this->tf(frequency) * this->idf();
+        }
+        else{
+            return 0.0;
+        }
+    }
+
+    double IndexCell::document_tf_idf(int document_id){
+        DocumentOccurrence* document = this->documents->operator[](document_id);
+        if(document != nullptr){
+            return this->tf(document->get_occurrencies()) * this->idf();
+        }
+        else{
+            return 0.0;
         }
     }
 

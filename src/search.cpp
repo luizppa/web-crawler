@@ -1,5 +1,7 @@
 #include<fstream>
 #include<map>
+#include<vector>
+#include<set>
 #include<string>
 #include<sstream>
 #include<iostream>
@@ -7,6 +9,7 @@
 
 #include"../include/search.hpp"
 #include"../include/index-cell.hpp"
+#include"../include/term-sanitizer.hpp"
 #include"../include/document-occurrence.hpp"
 #include "../third_party/nlohmann/json.hpp"
 
@@ -71,8 +74,6 @@ namespace search_engine {
         end = (long long int)file.tellg();
         file.seekg(0, std::ios::beg);
 
-        // std::cout << "Initial begin: " << begin << "\n";
-        // std::cout << "Initial end: " << end << "\n\n";
         while(begin != end && middle != last_middle){
             last_middle = middle;
             middle = (long long int)((begin+end)/2.0);
@@ -82,10 +83,6 @@ namespace search_engine {
             std::getline(file, file_entry, '\n');
             file_entry_stream.str(file_entry);
             file_entry_stream >> value;
-            // std::cout << "=================== Iteration " << i << " ===================\n";
-            // std::cout << "begin: " << begin << "\nend: " << end << "\nmiddle: " << middle << "\nvalue: " << value << "\n";
-            // std::cout << "line: " << file_entry;
-            // std::cout << "\n===================================================\n";
             if(value == search_value){
                 file.close();
                 return file_entry;
@@ -108,7 +105,7 @@ namespace search_engine {
         std::string term;
 
         while(query_stream >> term){
-            query_params->insert(std::pair<std::string, IndexCell*>(term, nullptr));
+            query_params->insert(std::pair<std::string, IndexCell*>(TermSanitizer::sanitize(term), nullptr));
         }
 
         return query_params;
@@ -121,49 +118,75 @@ namespace search_engine {
         }
         std::string id_str;
         std::string url;
-        std::string briefing;
+        std::string body;
         std::stringstream response_stream;
         
         std::stringstream document_briefing_stream(document_line);
-        // std::cout << "Index entry: " << document_line << "\n";
         std::getline(document_briefing_stream, id_str, ' ');
         std::getline(document_briefing_stream, url, ' ');
-        std::getline(document_briefing_stream, briefing, '\n');
-        response_stream << "\033[34m" << url << "\033[0m" << '\n' << briefing;
+        std::getline(document_briefing_stream, body, '\n');
+        response_stream << "\033[34m" << url << "\033[0m" << '\n' << body;
         return response_stream.str();
     }
 
-    std::map<int, std::string>* build_response(std::map<std::string, IndexCell*>* response_entries, std::string briefing_file_path){
-        std::map<std::string, IndexCell*>::iterator index_it;
-        std::map<int, DocumentOccurrence*>::iterator document_it;
-        std::map<int, std::string>::iterator response_it;
-        std::map<int, std::string>* response_documents = new std::map<int, std::string>();
-        std::string briefing_line;
-
-        if(response_entries->size() <= 0){
-            return response_documents;
+    double document_relevance(std::map<std::string, IndexCell*>* query_params, std::string query, int document_id){
+        std::map<std::string, IndexCell*>::iterator param;
+        double internal_product = 0.0;
+        double q_norm = 0.0;
+        double d_norm = 0.0;
+        for(param = query_params->begin(); param != query_params->end(); ++param){
+            internal_product += (param->second->query_tf_idf(query) * param->second->document_tf_idf(document_id));
+            q_norm += std::pow(param->second->query_tf_idf(query), 2);
+            d_norm += std::pow(param->second->document_tf_idf(document_id), 2);
         }
 
-        for(index_it = response_entries->begin(); index_it != response_entries->end(); ++index_it){
+        return internal_product/std::sqrt(d_norm) * std::sqrt(q_norm);
+    }
+
+    bool rank(std::pair<int, double> a, std::pair<int, double> b){
+        return a.second > b.second;
+    }
+
+    std::vector<std::string> build_response(std::map<std::string, IndexCell*>* query_params, std::string query, std::string briefing_file_path, int max_results){
+        std::map<std::string, IndexCell*>::iterator index_it;
+        std::map<int, DocumentOccurrence*>::iterator document_it;
+        std::vector<std::pair<int, double>>::iterator response_it;
+        std::vector<std::pair<int, double>> response_documents;
+        std::set<int> response_set;
+        std::vector<std::string> response;
+        std::string briefing_line;
+
+        if(query_params->size() <= 0){
+            return response;
+        }
+
+        for(index_it = query_params->begin(); index_it != query_params->end(); ++index_it){
             IndexCell* cell = index_it->second;
             if(cell != nullptr){
                 std::map<int, DocumentOccurrence*>* documents = cell->get_documents();
                 for(document_it = documents->begin(); document_it != documents->end(); ++document_it){
-                    // std::cout << "Searching for document " << document_it->second->get_id() << "\n";
-                    std::string document_briefing = search_document_briefing(document_it->second->get_id(), briefing_file_path);
-                    std::pair<int, std::string> response_pair(document_it->first, document_briefing);
-                    response_documents->insert(response_pair);
+                    int document_id = document_it->first;
+                    if(response_set.find(document_id) == response_set.end()){
+                        response_documents.push_back(std::pair<int, double>(document_id, document_relevance(query_params, query, document_id)));
+                        response_set.insert(document_id);
+                    }
                 }
             }
         }
 
-        return response_documents;
+        int i = 0;
+        std::sort(response_documents.begin(), response_documents.end(), rank);
+        for(response_it = response_documents.begin(); response_it != response_documents.end() && i != max_results; ++response_it, i++){
+            response.push_back(search_document_briefing(response_it->first, briefing_file_path));
+        }
+
+        return response;
     }
 
     void search(std::string query, std::string index_path, std::string briefing_path){
         std::map<std::string, IndexCell*>* query_params = get_query_params(query);
         std::map<std::string, IndexCell*>::iterator query_it = query_params->begin();
-        std::map<int, std::string>::iterator response_it;
+        std::vector<std::string>::iterator response_it;
         std::map<std::string, IndexCell*>::iterator index_it;
         std::string term;
 
@@ -172,9 +195,7 @@ namespace search_engine {
             ++query_it;
             std::string index_entry = file_binary_search(term, index_path);
             if(index_entry.length() > 0){
-                IndexCell* cell = IndexCell::load(index_entry, 5);
-                // std::cout << "Index entry: " << index_entry.substr(0, 50) << '\n';
-                // std::cout << "Found term " << cell->get_term() << " in " << cell->get_ni() << " relevant documents\n";
+                IndexCell* cell = IndexCell::load(index_entry);
                 query_params->operator[](term) = cell;
             }
             else{
@@ -183,9 +204,9 @@ namespace search_engine {
             }
         }
 
-        std::map<int, std::string>* response = build_response(query_params, briefing_path);
-        for(response_it = response->begin(); response_it != response->end(); ++response_it){
-            std::string response_entry = response_it->second;
+        std::vector<std::string> response = build_response(query_params, query, briefing_path, 10);
+        for(response_it = response.begin(); response_it != response.end(); ++response_it){
+            std::string response_entry = *response_it;
             if(response_entry.length() > 0){
                 std::cout << response_entry << "\n\n";
             }
@@ -195,7 +216,6 @@ namespace search_engine {
             delete index_it->second;
         }
         delete query_params;
-        delete response;
     }
 
 }
