@@ -6,6 +6,7 @@
 #include<sstream>
 #include<iostream>
 #include<algorithm>
+#include<chrono>
 
 #include"../include/search.hpp"
 #include"../include/index-cell.hpp"
@@ -135,9 +136,12 @@ namespace search_engine {
         double q_norm = 0.0;
         double d_norm = 0.0;
         for(param = query_params->begin(); param != query_params->end(); ++param){
-            internal_product += (param->second->query_tf_idf(query) * param->second->document_tf_idf(document_id));
-            q_norm += std::pow(param->second->query_tf_idf(query), 2);
-            d_norm += std::pow(param->second->document_tf_idf(document_id), 2);
+            IndexCell* cell = param->second;
+            if(cell != nullptr){
+                internal_product += (cell->query_tf_idf(query) * cell->document_tf_idf(document_id));
+                q_norm += std::pow(cell->query_tf_idf(query), 2);
+                d_norm += std::pow(cell->document_tf_idf(document_id), 2);
+            }
         }
 
         return internal_product/std::sqrt(d_norm) * std::sqrt(q_norm);
@@ -189,7 +193,9 @@ namespace search_engine {
         std::vector<std::string>::iterator response_it;
         std::map<std::string, IndexCell*>::iterator index_it;
         std::string term;
-
+        
+        std::cout << "================================================================\n";
+        auto start_time = std::chrono::high_resolution_clock::now();
         while(query_it != query_params->end()){
             term = query_it->first;
             ++query_it;
@@ -199,18 +205,23 @@ namespace search_engine {
                 query_params->operator[](term) = cell;
             }
             else{
-                std::cout << "Could not find any result matching the provided search\n\n";
+                std::cout << "Could not find any results matching " << term << "\n\n";
                 query_params->erase(term);
             }
         }
 
-        std::vector<std::string> response = build_response(query_params, query, briefing_path, 10);
+        std::vector<std::string> response = build_response(query_params, query, briefing_path, RESULTS_PER_PAGE);
         for(response_it = response.begin(); response_it != response.end(); ++response_it){
             std::string response_entry = *response_it;
             if(response_entry.length() > 0){
                 std::cout << response_entry << "\n\n";
             }
         }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        int milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        std::cout << "\033[32m" << "Done in " << milliseconds/1000.0 << " seconds." << "\033[0m\n";
+        std::cout << "================================================================\n\n";
 
         for(index_it = query_params->begin(); index_it != query_params->end(); ++index_it){
             delete index_it->second;

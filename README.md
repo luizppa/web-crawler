@@ -26,9 +26,9 @@ To run the application, you can either use ```make run``` (to run with sample in
 The available options are:
 
 * ```-c [SEED_FILE]``` replacing ```[SEED_FILE]``` with the path to the file containing your seeds, see [examples](#example). This will start the crawling process with ```[SEED_FILE]``` as seed.
-* ```-b [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default the collection path will be ```output/collection.jl```. This will build an index for the documents present at ```[COLLECTION_PATH]``` and output the index (.idx) file at ```output/```.
-* ```-l [INDEX_PATH]``` which will load the index file at ```[INDEX_PATH]``` to memory (carefull there).
-* ```-q [INDEX_PATH] [COLLECTION_PATH]``` where both ```[INDEX_PATH]``` and ```[COLLECTION_PATH]``` are optional, however, if ```[COLLECTION_PATH]``` is provided, so should be ```[INDEX_PATH]```. This will open the query CLI for searching documents (still in early development). 
+* ```-i [COLLECTION_PATH - optional]``` replacing ```[COLLECTION_PATH]``` with the path where your html collection is stored or simply leaving it blank, by default the collection path will be ```output/collection.jl```. This will build an index for the documents present at ```[COLLECTION_PATH]``` and an index for the vocabulary of the collection. Two output files briefing.doc.idx and index.idx, the index for the documents and the vocabulary respectivelly, will be created at ```output/```.
+* ```-l [VOCABULARY_INDEX_PATH]``` which will load the vocabulary index file at ```[VOCABULARY_INDEX_PATH]``` to memory (carefull there).
+* ```-q [VOCABULARY_INDEX_PATH] [COLLECTION_INDEX_PATH]``` where both ```[VOCABULARY_INDEX_PATH]``` and ```[COLLECTION_INDEX_PATH]``` are optional, however, if ```[COLLECTION_INDEX_PATH]``` is provided, so should be ```[VOCABULARY_INDEX_PATH]```. This will open the CLI for performing queries. Defaults are ```./output/index.idx``` and ```./output/briefing.doc.idx```.
 
 The documents on the collection are indexed in batches, by default, the maximum batch size is 4096, defined in ```include/indexer.hpp```. If the batch size is too big, the application will consume a large amount of RAM, however, if it is overly small, the execution time and disk usage may increase. On [this document](https://github.com/LuizPPA/web-crawler/blob/master/docs/Information_Retrieval_Assignment_4.pdf) is presented a chart roughly illustrating how memory consumption escalates with batch size.
 

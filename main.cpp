@@ -4,16 +4,17 @@
 #include "./include/indexer.hpp"
 #include "./include/search.hpp"
 
-#define PAGES_TO_COLLECT 10
+#define PAGES_TO_COLLECT 100000
 
 void query(char const* index_path, char const* collection_path){
     std::string query_string;
 
-    std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\nquery: ";
+    std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
+    std::cout << "query: " << "\033[33m";
     while(std::getline(std::cin, query_string, '\n')){
-        std::cout << '\n';
+        std::cout << "\033[0m" << '\n';
         search_engine::search(query_string, index_path, collection_path);
-        std::cout << "query: ";
+        std::cout << "query: " << "\033[33m";
     }
     std::cout << '\n';
 }
@@ -51,9 +52,9 @@ void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int a
                         indexer->build_brief(argv[i+1]);
                         i++;
                     }
-                    // else {
-                    //     indexer->build_brief();
-                    // }
+                    else {
+                        indexer->build_brief();
+                    }
                     break;
 
                 case 'l':

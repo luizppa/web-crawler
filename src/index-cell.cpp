@@ -5,6 +5,7 @@
 
 #include"../include/index-cell.hpp"
 #include"../include/document-occurrence.hpp"
+#include"../include/term-sanitizer.hpp"
 
 namespace search_engine{
     IndexCell::IndexCell(std::string term){
@@ -65,7 +66,7 @@ namespace search_engine{
     }
 
     double IndexCell::idf(){
-        return log(COLLECTION_SIZE/(double)this->get_ni());
+        return log((double)COLLECTION_SIZE/(double)this->get_ni());
     }
 
     double IndexCell::query_tf_idf(std::string query){
@@ -73,7 +74,7 @@ namespace search_engine{
         std::string term;
         int frequency = 0;
         while(std::getline(query_stream, term, ' ')){
-            if(this->term.compare(term) == 0){
+            if(this->term.compare(TermSanitizer::sanitize(term)) == 0){
                 frequency++;
             }
         }

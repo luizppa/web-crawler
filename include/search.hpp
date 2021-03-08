@@ -1,6 +1,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#define RESULTS_PER_PAGE 5
+
 #include<string>
 
 namespace search_engine {
