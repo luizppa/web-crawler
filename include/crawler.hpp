@@ -30,6 +30,7 @@ namespace search_engine {
             std::map<std::string, Record*> registry;
             Scheduler scheduler;
             std::ofstream threads_log;
+            std::ofstream collection_stream;
 
             std::string get_next_url();
             void queue_if_unvisited(std::string url);

@@ -11,6 +11,7 @@
 #include "../include/term-sanitizer.hpp"
 #include "../include/indexer.hpp"
 #include "../include/json.hpp"
+#include "../include/log-utils.hpp"
  
 namespace search_engine {
 
@@ -101,7 +102,7 @@ namespace search_engine {
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
             std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
-            std::cout << "\033[34m" << (pages_to_index*iteration)+i << "\033[0m" << " Building index for " << document_data.first << "...\t";
+            std::cout << BLUE << (pages_to_index*iteration)+i << RESET << " Building index for " << document_data.first << "...\t";
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_data.second));
                 std::string briefing = file_content.str().substr(0,50);
@@ -115,10 +116,10 @@ namespace search_engine {
                         position++;
                     }
                 }
-                std::cout << "\033[32m" << "DONE!\n" << "\033[0m";
+                std::cout << BOLDGREEN << "DONE!\n" << RESET;
             }
             catch(...){
-                std::cout << "\033[31m" << "FAILED!\n" << "\033[0m";
+                std::cout << BOLDRED << "FAILED!\n" << RESET;
                 continue;
             }
         }
@@ -214,7 +215,7 @@ namespace search_engine {
             index_file->close();
             delete index_file;
         }
-                std::cout << "\033[32m" << "DONE!\n" << "\033[0m";
+        std::cout << BOLDGREEN << "DONE!\n" << RESET;
         auto end_time = std::chrono::high_resolution_clock::now();
         int seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
         std::cout << "Merged " << indexes_number << " indexes in " << seconds << " seconds.\n";
@@ -239,15 +240,15 @@ namespace search_engine {
         for(i = 0; std::getline(collection_file, line); i++){
             std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
             std::string url = document_data.first;
-            std::cout << "\033[34m" << i << "\033[0m" << " Building brief for " << url << "...\t";
+            std::cout << BLUE << i << RESET << " Building brief for " << url << "...\t";
             try{
                 std::string content = TermSanitizer::html_text(document_data.second).substr(0,200);
                 content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
                 collection_briefing_file << i << ' ' << url << ' ' << content << "...\n";
-                std::cout << "\033[32m" << "DONE!\n" << "\033[0m";
+                std::cout << BOLDGREEN << "DONE!\n" << RESET;
             }
             catch(...){
-                std::cout << "\033[31m" << "FAILED!\n" << "\033[0m";
+                std::cout << BOLDRED << "FAILED!\n" << RESET;
                 continue;
             }
         }

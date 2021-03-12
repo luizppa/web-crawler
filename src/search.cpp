@@ -8,6 +8,7 @@
 #include<algorithm>
 #include<chrono>
 
+#include "../include/log-utils.hpp"
 #include"../include/search.hpp"
 #include"../include/index-cell.hpp"
 #include"../include/term-sanitizer.hpp"
@@ -126,7 +127,7 @@ namespace search_engine {
         std::getline(document_briefing_stream, id_str, ' ');
         std::getline(document_briefing_stream, url, ' ');
         std::getline(document_briefing_stream, body, '\n');
-        response_stream << "\033[34m" << url << "\033[0m" << '\n' << body;
+        response_stream << BOLDBLUE << url << RESET << '\n' << body;
         return response_stream.str();
     }
 
@@ -220,7 +221,7 @@ namespace search_engine {
 
         auto end_time = std::chrono::high_resolution_clock::now();
         int milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        std::cout << "\033[32m" << "Done in " << milliseconds/1000.0 << " seconds." << "\033[0m\n";
+        std::cout << GREEN << "Done in " << milliseconds/1000.0 << " seconds." << RESET;
         std::cout << "================================================================\n\n";
 
         for(index_it = query_params->begin(); index_it != query_params->end(); ++index_it){

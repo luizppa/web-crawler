@@ -13,21 +13,25 @@
 #include<unistd.h>
 #include<algorithm>
 
+#include"../third_party/rapidjson/document.h"
 #include "../third_party/nlohmann/json.hpp"
 #include "../include/crawler.hpp"
 #include "../include/record.hpp"
 #include "../include/term-sanitizer.hpp"
+#include "../include/log-utils.hpp"
 
 namespace search_engine {
     Crawler::Crawler(){
         this->threads_log.open(THREADS_LOG_PATH);
+        this->threads_log.close();
+        this->collection_stream.open(COLLECTION_PATH);
     }
 
     Crawler::~Crawler(){
         for(std::map<std::string, Record*>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
             delete it->second;
         }
-        this->threads_log.close();
+        this->collection_stream.close();
     }
 
     bool Crawler::finished(){
@@ -73,7 +77,7 @@ namespace search_engine {
             }
             else{
                 this->scheduler.push(url);
-                usleep(1000000);
+                usleep(10000);
             }
         }
         return std::string("");
@@ -81,17 +85,21 @@ namespace search_engine {
 
     void Crawler::start_task(){
         std::thread* thread = new std::thread(this->crawl_url, this);
+        this->threads_log.open(THREADS_LOG_PATH, std::ios::app);
         this->threads_log << "Created task " << thread->get_id() << '\n';
+        this->threads_log.close();
         this->tasks.push_back(thread);
     }
 
-    void Crawler::save_document(std::string url, std::string html_content){
-        std::ofstream html_collection(COLLECTION_PATH, std::ios_base::app);
-        nlohmann::json document_json;
-        document_json["url"] = url;
-        document_json["html_content"] = TermSanitizer::replace_all(html_content, '\n', " ");
-        html_collection << document_json << '\n';
-        html_collection.close();
+    void Crawler::save_document(std::string url, std::string content){
+        rapidjson::Document document_json;
+        std::string sanitized_content = TermSanitizer::replace_all(content, '\n', " ");
+        document_json.SetString(sanitized_content.c_str(), sanitized_content.length());
+        std::string html_content = document_json.GetString();
+
+        this->mutex.lock();
+        this->collection_stream << "{\"url\":\"" << url << "\",\"html_content\":\"" << html_content  << "\"}\n";
+        this->mutex.unlock();
     }
 
     void Crawler::join_tasks(){
@@ -110,9 +118,7 @@ namespace search_engine {
         CkSpider spider;
         std::string domain = std::string(spider.getUrlDomain(url.c_str()));
         if(this->registry.find(domain) == this->registry.end() || !this->registry[domain]->has_visited(url)){
-            this->mutex.lock();
             this->scheduler.push(url);
-            this->mutex.unlock();
         }
     }
 
@@ -148,15 +154,16 @@ namespace search_engine {
                     if(success){
                         crawler->mutex.lock();
                         if(!crawler->finished()){
-                            crawler->registry[registry_entry]->visit_page(url, time);
                             crawler->visited_pages++;
-                            std::cout << spider.lastHtmlTitle()  << '\n' << spider.lastUrl() << "\n\n";
+                            crawler->mutex.unlock();
+                            crawler->registry[registry_entry]->visit_page(url, time);
+                            std::cout << BOLDYELLOW << crawler->visited_pages << RESET << ": " << spider.lastHtmlTitle()  << '\n' << BLUE << spider.lastUrl() << RESET << "\n\n";
                             crawler->save_document(std::string(spider.lastUrl()), std::string(spider.lastHtml()));
                         }
                         else{
+                            crawler->mutex.unlock();
                             break;
                         }
-                        crawler->mutex.unlock();
 
                         for(int i = 0; i < spider.get_NumOutboundLinks() && !crawler->finished(); i++){
                             try{

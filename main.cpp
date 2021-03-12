@@ -3,6 +3,7 @@
 #include "./include/crawler.hpp"
 #include "./include/indexer.hpp"
 #include "./include/search.hpp"
+#include "./include/log-utils.hpp"
 
 #define PAGES_TO_COLLECT 100000
 
@@ -10,13 +11,13 @@ void query(char const* index_path, char const* collection_path){
     std::string query_string;
 
     std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
-    std::cout << "query: " << "\033[33m";
+    std::cout << "query: " << BOLDYELLOW;
     while(std::getline(std::cin, query_string, '\n')){
-        std::cout << "\033[0m" << '\n';
+        std::cout << RESET << '\n';
         search_engine::search(query_string, index_path, collection_path);
-        std::cout << "query: " << "\033[33m";
+        std::cout << "query: " << BOLDYELLOW;
     }
-    std::cout << '\n';
+    std::cout << RESET << '\n';
 }
 
 void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int argc, char* const argv[]){
