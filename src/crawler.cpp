@@ -1,4 +1,5 @@
 #include<CkSpider.h>
+#include<CkStringBuilder.h>
 #include<string>
 #include<sstream>
 #include<cstring>
@@ -13,8 +14,6 @@
 #include<unistd.h>
 #include<algorithm>
 
-#include"../third_party/rapidjson/document.h"
-#include "../third_party/nlohmann/json.hpp"
 #include "../include/crawler.hpp"
 #include "../include/record.hpp"
 #include "../include/term-sanitizer.hpp"
@@ -24,14 +23,12 @@ namespace search_engine {
     Crawler::Crawler(){
         this->threads_log.open(THREADS_LOG_PATH);
         this->threads_log.close();
-        this->collection_stream.open(COLLECTION_PATH);
     }
 
     Crawler::~Crawler(){
         for(std::map<std::string, Record*>::iterator it = this->registry.begin(); it != this->registry.end(); ++it){
             delete it->second;
         }
-        this->collection_stream.close();
     }
 
     bool Crawler::finished(){
@@ -92,13 +89,12 @@ namespace search_engine {
     }
 
     void Crawler::save_document(std::string url, std::string content){
-        rapidjson::Document document_json;
-        std::string sanitized_content = TermSanitizer::replace_all(content, '\n', " ");
-        document_json.SetString(sanitized_content.c_str(), sanitized_content.length());
-        std::string html_content = document_json.GetString();
+        CkStringBuilder sb;
+        sb.Append(TermSanitizer::replace_all(content, '\n', " ").c_str());
+        sb.Encode("json","utf-8");
 
         this->mutex.lock();
-        this->collection_stream << "{\"url\":\"" << url << "\",\"html_content\":\"" << html_content  << "\"}\n";
+        this->collection_stream << "{\"url\":\"" << url << "\",\"html_content\":\"" << sb.getAsString()  << "\"}\n";
         this->mutex.unlock();
     }
 
@@ -124,6 +120,7 @@ namespace search_engine {
 
     void Crawler::crawl_url(Crawler* crawler){
         CkSpider spider;
+        spider.put_Utf8(true);
         spider.AddAvoidOutboundLinkPattern("*twitter.com*");
         spider.put_ConnectTimeout(5);
         std::ofstream error_log(ERROR_LOG_PATH);
@@ -155,9 +152,9 @@ namespace search_engine {
                         crawler->mutex.lock();
                         if(!crawler->finished()){
                             crawler->visited_pages++;
-                            crawler->mutex.unlock();
                             crawler->registry[registry_entry]->visit_page(url, time);
                             std::cout << BOLDYELLOW << crawler->visited_pages << RESET << ": " << spider.lastHtmlTitle()  << '\n' << BLUE << spider.lastUrl() << RESET << "\n\n";
+                            crawler->mutex.unlock();
                             crawler->save_document(std::string(spider.lastUrl()), std::string(spider.lastHtml()));
                         }
                         else{
@@ -193,6 +190,7 @@ namespace search_engine {
 
     void Crawler::crawl(const char* seed_file_path, int pages_to_collect){
         std::ifstream input_file;
+        this->collection_stream.open(COLLECTION_PATH);
         input_file.open(seed_file_path);
         if(input_file.is_open()){
             std::string url;
@@ -215,6 +213,7 @@ namespace search_engine {
                 usleep(10000);
             }
         }
+        this->collection_stream.close();
         auto end_time = std::chrono::high_resolution_clock::now();
         this->milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
