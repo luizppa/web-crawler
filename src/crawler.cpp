@@ -88,13 +88,17 @@ namespace search_engine {
         this->tasks.push_back(thread);
     }
 
-    void Crawler::save_document(std::string url, std::string content){
-        CkStringBuilder sb;
-        sb.Append(TermSanitizer::replace_all(content, '\n', " ").c_str());
-        sb.Encode("json","utf-8");
+    void Crawler::save_document(std::string url, std::string html_content){
+        CkStringBuilder url_encoder;
+        CkStringBuilder html_content_encoder;
+
+        url_encoder.Append(url.c_str());
+        url_encoder.Encode("json","utf-8");
+        html_content_encoder.Append(TermSanitizer::replace_all(html_content, '\n', " ").c_str());
+        html_content_encoder.Encode("json","utf-8");
 
         this->mutex.lock();
-        this->collection_stream << "{\"url\":\"" << url << "\",\"html_content\":\"" << sb.getAsString()  << "\"}\n";
+        this->collection_stream << "{\"url\":\"" << url_encoder.getAsString() << "\",\"html_content\":\"" << html_content_encoder.getAsString()  << "\"}\n";
         this->mutex.unlock();
     }
 

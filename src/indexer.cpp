@@ -101,7 +101,7 @@ namespace search_engine {
         std::string line;
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
             int position = 0;
-            std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
+            std::pair<std::string, std::string> document_data = json::nlohmann_parse(line);
             std::cout << BLUE << (pages_to_index*iteration)+i << RESET << " Building index for " << document_data.first << "...\t";
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_data.second));
