@@ -101,14 +101,19 @@ namespace search_engine {
          * @return std::pair<std::string, std::string> containing the document url and body respectively
          */
         std::pair<std::string, std::string> rapidjson_parse(std::string json_str){
-            rapidjson::Document json_obj;
-            CkString str;
-            str.appendUtf8(json_str.c_str());
-            const char *ansi_json = str.getAnsi();
-            json_obj.Parse(ansi_json);
-            std::string url = json_obj["url"].GetString();
-            std::string body = json_obj["html_content"].GetString();
-            return std::pair<std::string, std::string>(url, body);
+            try{
+                rapidjson::Document json_obj;
+                CkString str;
+                str.appendUtf8(json_str.c_str());
+                const char *ansi_json = str.getAnsi();
+                json_obj.Parse(ansi_json);
+                std::string url = json_obj["url"].GetString();
+                std::string body = json_obj["html_content"].GetString();
+                return std::pair<std::string, std::string>(url, body);
+            }
+            catch(...){
+                return std::pair<std::string, std::string>("", "");
+            }
         }
 
     }

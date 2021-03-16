@@ -7,14 +7,41 @@
 
 #define PAGES_TO_COLLECT 100000
 
-void query(char const* index_path, char const* collection_path){
+void query(char const* index_path, char const* collection_briefing_path, char const* rank_path){
     std::string query_string;
+
+    std::cout << BOLDGREEN << "Loading";
+    search_engine::Search::init_vocabulary(index_path);
+    std::cout << ".";
+    search_engine::Search::init_collection(collection_briefing_path);
+    std::cout << ".";
+    search_engine::Search::init_rank_weights(rank_path);
+    std::cout << "." << RESET << "\n\n";
 
     std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
     std::cout << "query: " << BOLDYELLOW;
     while(std::getline(std::cin, query_string, '\n')){
         std::cout << RESET << '\n';
-        search_engine::search(query_string, index_path, collection_path);
+        search_engine::Search::execute_query(query_string, index_path, collection_briefing_path);
+        std::cout << "query: " << BOLDYELLOW;
+    }
+    std::cout << RESET << '\n';
+}
+
+void query(char const* index_path, char const* collection_briefing_path){
+    std::string query_string;
+
+    std::cout << BOLDGREEN << "Loading.";
+    search_engine::Search::init_vocabulary(index_path);
+    std::cout << ".";
+    search_engine::Search::init_collection(collection_briefing_path);
+    std::cout << "." << RESET << "\n\n";
+
+    std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
+    std::cout << "query: " << BOLDYELLOW;
+    while(std::getline(std::cin, query_string, '\n')){
+        std::cout << RESET << '\n';
+        search_engine::Search::execute_query(query_string, index_path, collection_briefing_path);
         std::cout << "query: " << BOLDYELLOW;
     }
     std::cout << RESET << '\n';
@@ -71,7 +98,11 @@ void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int a
                     break;
 
                 case 'q':
-                    if(argc > i + 2 && argv[i+1][0] != '-' && argv[i+2][0] != '-'){   
+                    if(argc > i + 3 && argv[i+1][0] != '-' && argv[i+2][0] != '-' && argv[i+3][0] != '-'){   
+                        query(argv[i+1], argv[i+2], argv[i+3]);
+                        i += 3;
+                    }
+                    else if(argc > i + 2 && argv[i+1][0] != '-' && argv[i+2][0] != '-'){   
                         query(argv[i+1], argv[i+2]);
                         i += 2;
                     }

@@ -17,6 +17,10 @@
 
 namespace search_engine {
 
+    std::map<int, std::string> Search::collection_index;
+    std::map<std::string, int> Search::vocabulary_index;
+    nlohmann::json Search::rank_weights;
+
     /**
      * @brief Searches for a line staring with a given term on the file located at the provided path.
      * The file must be in lexical order of the first term for the search to work.
@@ -25,7 +29,7 @@ namespace search_engine {
      * @param file_path Path to the file in which to perform the search
      * @return string of the line that matched the search, empty string if no match was found
     */
-    std::string file_binary_search(std::string search_term, std::string file_path){
+    std::string Search::file_binary_search(std::string search_term, char const* file_path){
         std::ifstream file(file_path, std::ios::binary);
         std::string term, file_entry;
         std::stringstream file_entry_stream;
@@ -66,7 +70,7 @@ namespace search_engine {
      * @param file_path Path to the file in which to perform the search
      * @return int with the character position of the start of the line where the value was found or -1 if it was not found
     */
-    std::string file_binary_search(int search_value, std::string file_path){
+    std::string Search::file_binary_search(int search_value, char const* file_path){
         std::ifstream file(file_path, std::ios::binary);
         std::string file_entry;
         int i = 0, value;
@@ -101,7 +105,7 @@ namespace search_engine {
         return "";
     }
 
-    std::map<std::string, IndexCell*>* get_query_params(std::string query){
+    std::map<std::string, IndexCell*>* Search::get_query_params(std::string query){
         std::stringstream query_stream(query);
         std::map<std::string, IndexCell*>* query_params = new std::map<std::string, IndexCell*>();
         std::string term;
@@ -113,51 +117,77 @@ namespace search_engine {
         return query_params;
     }
 
-    std::string search_document_briefing(int id, std::string briefing_file_path){
-        std::string document_line = file_binary_search(id, briefing_file_path);
+    std::pair<std::string, std::string> Search::search_document_briefing(int id, char const* briefing_path){
+        std::string document_line;
+
+        if(Search::collection_index.find(id) != Search::collection_index.end()){
+            return std::pair<std::string, std::string>(Search::collection_index[id], "");
+        }
+        else{
+            document_line = file_binary_search(id, briefing_path);
+        }
+
         if(document_line.length() <= 0){
-            return "";
+            return std::pair<std::string, std::string>("", "");
         }
         std::string id_str;
         std::string url;
         std::string body;
-        std::stringstream response_stream;
         
         std::stringstream document_briefing_stream(document_line);
         std::getline(document_briefing_stream, id_str, ' ');
         std::getline(document_briefing_stream, url, ' ');
         std::getline(document_briefing_stream, body, '\n');
-        response_stream << BOLDBLUE << url << RESET << '\n' << body;
-        return response_stream.str();
+        // std::cout << document_line << '\n';
+        return std::pair<std::string, std::string>(url, body);
     }
 
-    double document_relevance(std::map<std::string, IndexCell*>* query_params, std::string query, int document_id){
+    IndexCell* Search::search_index_entry(std::string word, char const* index_path){
+        std::string index_entrystring;
+        if(Search::vocabulary_index.find(word) != Search::vocabulary_index.end()){
+            std::ifstream index_file(index_path);
+            index_file.seekg(Search::vocabulary_index[word], std::ios::beg);
+            std::getline(index_file, index_entrystring);
+            index_file.close();
+        }
+        index_entrystring = file_binary_search(word, index_path);
+        if(index_entrystring.length() > 0){
+            IndexCell* index_entry = IndexCell::load(index_entrystring);
+            return index_entry;
+        }
+        else{
+            return nullptr;
+        }
+    }
+
+    double Search::document_relevance(std::map<std::string, IndexCell*>* query_params, std::string query, int document_id, std::string url){
         std::map<std::string, IndexCell*>::iterator param;
         double internal_product = 0.0;
         double q_norm = 0.0;
         double d_norm = 0.0;
+        float page_weight = get_page_weight(url);
         for(param = query_params->begin(); param != query_params->end(); ++param){
             IndexCell* cell = param->second;
             if(cell != nullptr){
-                internal_product += (cell->query_tf_idf(query) * cell->document_tf_idf(document_id));
+                internal_product += (cell->query_tf_idf(query) * cell->document_tf_idf(document_id) * page_weight);
                 q_norm += std::pow(cell->query_tf_idf(query), 2);
-                d_norm += std::pow(cell->document_tf_idf(document_id), 2);
+                d_norm += std::pow((cell->document_tf_idf(document_id) * page_weight), 2);
             }
         }
 
         return internal_product/std::sqrt(d_norm) * std::sqrt(q_norm);
     }
 
-    bool rank(std::pair<int, double> a, std::pair<int, double> b){
+    bool Search::rank(std::pair<int, double> a, std::pair<int, double> b){
         return a.second > b.second;
     }
 
-    std::vector<std::string> build_response(std::map<std::string, IndexCell*>* query_params, std::string query, std::string briefing_file_path, int max_results){
+    std::vector<std::string> Search::build_response(std::map<std::string, IndexCell*>* query_params, std::string query, char const* briefing_path, int max_results){
         std::map<std::string, IndexCell*>::iterator index_it;
         std::map<int, DocumentOccurrence*>::iterator document_it;
         std::vector<std::pair<int, double>>::iterator response_it;
         std::vector<std::pair<int, double>> response_documents;
-        std::set<int> response_set;
+        std::map<int, std::pair<std::string, std::string>> response_set;
         std::vector<std::string> response;
         std::string briefing_line;
 
@@ -172,23 +202,27 @@ namespace search_engine {
                 for(document_it = documents->begin(); document_it != documents->end(); ++document_it){
                     int document_id = document_it->first;
                     if(response_set.find(document_id) == response_set.end()){
-                        response_documents.push_back(std::pair<int, double>(document_id, document_relevance(query_params, query, document_id)));
-                        response_set.insert(document_id);
+                        std::pair<std::string, std::string> document_info = Search::search_document_briefing(document_id, briefing_path);
+                        response_documents.push_back(std::pair<int, double>(document_id, Search::document_relevance(query_params, query, document_id, document_info.first)));
+                        response_set[document_id] = document_info;
                     }
                 }
             }
         }
 
         int i = 0;
-        std::sort(response_documents.begin(), response_documents.end(), rank);
+        std::sort(response_documents.begin(), response_documents.end(), Search::rank);
         for(response_it = response_documents.begin(); response_it != response_documents.end() && i != max_results; ++response_it, i++){
-            response.push_back(search_document_briefing(response_it->first, briefing_file_path));
+            std::stringstream response_text;
+            std::pair<std::string, std::string> document_info = response_set[response_it->first];
+            response_text << BOLDBLUE << document_info.first << RESET << '\n' << document_info.second;
+            response.push_back(response_text.str());
         }
 
         return response;
     }
 
-    void search(std::string query, std::string index_path, std::string briefing_path){
+    void Search::execute_query(std::string query, char const* index_path, char const* briefing_path){
         std::map<std::string, IndexCell*>* query_params = get_query_params(query);
         std::map<std::string, IndexCell*>::iterator query_it = query_params->begin();
         std::vector<std::string>::iterator response_it;
@@ -200,9 +234,8 @@ namespace search_engine {
         while(query_it != query_params->end()){
             term = query_it->first;
             ++query_it;
-            std::string index_entry = file_binary_search(term, index_path);
-            if(index_entry.length() > 0){
-                IndexCell* cell = IndexCell::load(index_entry);
+            IndexCell* cell = Search::search_index_entry(term, index_path);
+            if(cell != nullptr){
                 query_params->operator[](term) = cell;
             }
             else{
@@ -211,7 +244,7 @@ namespace search_engine {
             }
         }
 
-        std::vector<std::string> response = build_response(query_params, query, briefing_path, RESULTS_PER_PAGE);
+        std::vector<std::string> response = Search::build_response(query_params, query, briefing_path, RESULTS_PER_PAGE);
         for(response_it = response.begin(); response_it != response.end(); ++response_it){
             std::string response_entry = *response_it;
             if(response_entry.length() > 0){
@@ -221,13 +254,66 @@ namespace search_engine {
 
         auto end_time = std::chrono::high_resolution_clock::now();
         int milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        std::cout << GREEN << "Done in " << milliseconds/1000.0 << " seconds." << RESET;
+        std::cout << GREEN << "Done in " << milliseconds/1000.0 << " seconds.\n" << RESET;
         std::cout << "================================================================\n\n";
 
         for(index_it = query_params->begin(); index_it != query_params->end(); ++index_it){
             delete index_it->second;
         }
         delete query_params;
+    }
+
+    float Search::get_page_weight(std::string page){
+        if(Search::rank_weights.is_null()){
+            return 1.0;
+        }
+        else if(Search::rank_weights.is_object()){
+            if(Search::rank_weights.find(page) != Search::rank_weights.end()){
+                return (float) Search::rank_weights[page];
+            }
+            else {
+                return 1.0;
+            }
+        }
+        else {
+            return 1.0;
+        }
+    }
+
+    void Search::init_vocabulary(char const* vocabulary_path){
+        std::ifstream vocabulary_file(vocabulary_path);
+        std::string word, line;
+        int position = vocabulary_file.tellg();
+
+        while(vocabulary_file >> word){
+            Search::vocabulary_index[word] = position;
+            std::getline(vocabulary_file, line);
+            position = vocabulary_file.tellg();
+        }
+
+        vocabulary_file.close();
+    }
+
+    void Search::init_collection(char const* collection_path){
+        std::ifstream collection_file(collection_path);
+        std::string url, body;
+        int document_id, position = collection_file.tellg();
+
+        while(collection_file >> document_id){
+            collection_file >> url;
+            Search::collection_index[document_id] = url;
+            std::getline(collection_file, body, '\n');
+            position = collection_file.tellg();
+        }
+
+        collection_file.close();
+    }
+
+    void Search::init_rank_weights(char const* rank_path){
+        std::ifstream rank_file(rank_path);
+        if(rank_file.is_open()){
+            rank_file >> Search::rank_weights;
+        }
     }
 
 }
