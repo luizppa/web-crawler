@@ -10,13 +10,8 @@
 void query(char const* index_path, char const* collection_briefing_path, char const* rank_path){
     std::string query_string;
 
-    std::cout << BOLDGREEN << "Loading";
-    search_engine::Search::init_vocabulary(index_path);
-    std::cout << ".";
-    search_engine::Search::init_collection(collection_briefing_path);
-    std::cout << ".";
+    std::cout << BOLDGREEN << "Loading..." << RESET << "\n\n";
     search_engine::Search::init_rank_weights(rank_path);
-    std::cout << "." << RESET << "\n\n";
 
     std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
     std::cout << "query: " << BOLDYELLOW;
@@ -31,11 +26,7 @@ void query(char const* index_path, char const* collection_briefing_path, char co
 void query(char const* index_path, char const* collection_briefing_path){
     std::string query_string;
 
-    std::cout << BOLDGREEN << "Loading.";
-    search_engine::Search::init_vocabulary(index_path);
-    std::cout << ".";
-    search_engine::Search::init_collection(collection_briefing_path);
-    std::cout << "." << RESET << "\n\n";
+    std::cout << BOLDGREEN << "Loading..." << RESET << "\n\n";
 
     std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
     std::cout << "query: " << BOLDYELLOW;

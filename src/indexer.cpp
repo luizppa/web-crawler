@@ -107,7 +107,7 @@ namespace search_engine {
                 std::istringstream file_content(TermSanitizer::html_text(document_data.second));
                 std::string briefing = file_content.str().substr(0,50);
                 briefing.erase(std::remove(briefing.begin(), briefing.end(), '\n'), briefing.end());
-                collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_data.first << briefing << '\n';
+                collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_data.first << '\n';
                 std::string word;
                 while(file_content >> word){
                     word = TermSanitizer::sanitize(word);
@@ -238,13 +238,11 @@ namespace search_engine {
         int i;
 
         for(i = 0; std::getline(collection_file, line); i++){
-            std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
-            std::string url = document_data.first;
-            std::cout << BLUE << i << RESET << " Building brief for " << url << "...\t";
             try{
-                std::string content = TermSanitizer::html_text(document_data.second).substr(0,200);
-                content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
-                collection_briefing_file << i << ' ' << url << ' ' << content << "...\n";
+                std::pair<std::string, std::string> document_data = json::rapidjson_parse(line);
+                std::string url = document_data.first;
+                std::cout << BLUE << i << RESET << " Building brief for " << url << "...\t";
+                collection_briefing_file << i << ' ' << url << '\n';
                 std::cout << BOLDGREEN << "DONE!\n" << RESET;
             }
             catch(...){
@@ -255,7 +253,7 @@ namespace search_engine {
 
         auto end_time = std::chrono::high_resolution_clock::now();
         int seconds = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
-        std::cout << "With parse: processed " << i << " lines in " << seconds << " seconds.\n";
+        std::cout << "Processed " << i << " lines in " << seconds << " seconds.\n";
 
         collection_file.close();
         collection_briefing_file.close();
