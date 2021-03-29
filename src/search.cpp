@@ -141,7 +141,9 @@ namespace search_engine {
             std::getline(index_file, index_entrystring);
             index_file.close();
         }
-        index_entrystring = file_binary_search(word, index_path);
+        else{
+            index_entrystring = file_binary_search(word, index_path);
+        }
         if(index_entrystring.length() > 0){
             IndexCell* index_entry = IndexCell::load(index_entrystring);
             return index_entry;
@@ -205,8 +207,14 @@ namespace search_engine {
         std::sort(response_documents.begin(), response_documents.end(), Search::rank);
         for(response_it = response_documents.begin(); response_it != response_documents.end() && i != max_results; ++response_it, i++){
             std::stringstream response_text;
-            std::string document_url = Search::search_document_briefing(response_it->first, briefing_path);
-            response_text << BOLDBLUE << document_url << RESET;
+            try{
+                std::string document_url = Search::search_document_briefing(response_it->first, briefing_path);
+                response_text << BOLDBLUE << document_url << RESET;
+            }
+            catch(std::logic_error){
+                i--;
+                continue;
+            }
             response.push_back(response_text.str());
         }
 
