@@ -15,7 +15,7 @@
 #include"../include/document-occurrence.hpp"
 #include "../third_party/nlohmann/json.hpp"
 
-#define TERM_TOLERANCE 0.7
+#define TERM_TOLERANCE 0.3
 
 namespace search_engine {
 
