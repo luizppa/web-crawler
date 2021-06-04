@@ -31,6 +31,7 @@ namespace search_engine {
             std::string dump();
             std::string sort_dump();
             static IndexCell* load(std::string index_entry);
+            static IndexCell* load(std::string term, int ni, std::string index_entry);
             static IndexCell* load(std::string index_entry, int max_documents);
     };
 }

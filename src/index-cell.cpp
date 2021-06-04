@@ -137,13 +137,29 @@ namespace search_engine{
 
     IndexCell* IndexCell::load(std::string index_entry){
         std::stringstream stream(index_entry);
-        std::string word;
+        std::string term;
         int ni;
 
-        std::getline(stream, word, ' ');
+        std::getline(stream, term, ' ');
         stream >> ni;
 
-        IndexCell* cell = new IndexCell(word);
+        IndexCell* cell = new IndexCell(term);
+        for(int i = 0; i < ni; i++){
+            int document_id, document_occurrences;
+            stream >> document_id >> document_occurrences;
+            for(int j = 0; j < document_occurrences; j++){
+                int position;
+                stream >> position;
+                cell->add_occurence(document_id, position);
+            }
+        }
+        return cell;
+    }
+
+    IndexCell* IndexCell::load(std::string term, int ni, std::string index_entry){
+        std::stringstream stream(index_entry);
+
+        IndexCell* cell = new IndexCell(term);
         for(int i = 0; i < ni; i++){
             int document_id, document_occurrences;
             stream >> document_id >> document_occurrences;
@@ -158,14 +174,14 @@ namespace search_engine{
 
     IndexCell* IndexCell::load(std::string index_entry, int max_documents){
         std::stringstream stream(index_entry);
-        std::string word;
+        std::string term;
         int ni;
 
-        std::getline(stream, word, ' ');
+        std::getline(stream, term, ' ');
         stream >> ni;
         ni = ni < max_documents ? ni : max_documents;
 
-        IndexCell* cell = new IndexCell(word);
+        IndexCell* cell = new IndexCell(term);
         for(int i = 0; i < ni; i++){
             int document_id, document_occurrences;
             stream >> document_id >> document_occurrences;

@@ -7,11 +7,8 @@
 
 #define PAGES_TO_COLLECT 100000
 
-void query(char const* index_path, char const* collection_briefing_path, char const* rank_path){
+void query_interface(char const* index_path, char const* collection_briefing_path) {
     std::string query_string;
-
-    std::cout << BOLDGREEN << "Loading..." << RESET << "\n\n";
-    search_engine::Search::init_rank_weights(rank_path);
 
     std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
     std::cout << "query: " << BOLDYELLOW;
@@ -23,19 +20,16 @@ void query(char const* index_path, char const* collection_briefing_path, char co
     std::cout << RESET << '\n';
 }
 
+void query(char const* index_path, char const* collection_briefing_path, char const* rank_path){
+    std::cout << BOLDGREEN << "Loading.";
+    search_engine::Search::init_rank_weights(rank_path);
+    std::cout << ".." << RESET << "\n\n";
+    query_interface(index_path, collection_briefing_path);
+}
+
 void query(char const* index_path, char const* collection_briefing_path){
-    std::string query_string;
-
     std::cout << BOLDGREEN << "Loading..." << RESET << "\n\n";
-
-    std::cout << "=============== Query interface (Ctrl+D to exit) ===============\n\n";
-    std::cout << "query: " << BOLDYELLOW;
-    while(std::getline(std::cin, query_string, '\n')){
-        std::cout << RESET << '\n';
-        search_engine::Search::execute_query(query_string, index_path, collection_briefing_path);
-        std::cout << "query: " << BOLDYELLOW;
-    }
-    std::cout << RESET << '\n';
+    query_interface(index_path, collection_briefing_path);
 }
 
 void run(search_engine::Crawler* crawler, search_engine::Indexer* indexer, int argc, char* const argv[]){

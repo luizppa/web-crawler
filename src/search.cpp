@@ -15,9 +15,10 @@
 #include"../include/document-occurrence.hpp"
 #include "../third_party/nlohmann/json.hpp"
 
+#define TERM_TOLERANCE 0.7
+
 namespace search_engine {
 
-    std::map<std::string, int> Search::vocabulary_index;
     std::map<int, double> Search::rank_weights;
 
     /**
@@ -28,11 +29,11 @@ namespace search_engine {
      * @param file_path Path to the file in which to perform the search
      * @return string of the line that matched the search, empty string if no match was found
     */
-    std::string Search::file_binary_search(std::string search_term, char const* file_path){
+    long long int Search::file_binary_search(std::string search_term, char const* file_path){
         std::ifstream file(file_path, std::ios::binary);
         std::string term, file_entry;
         std::stringstream file_entry_stream;
-        long long int begin = 0, end, middle = -1, last_middle = 0;
+        long long int position = 0, begin = 0, end, middle = -1, last_middle = 0;
         file.seekg(0, std::ios::end);
         end = (long long int)file.tellg();
         file.seekg(0, std::ios::beg);
@@ -41,14 +42,13 @@ namespace search_engine {
             last_middle = middle;
             middle = (long long int)((begin+end)/2.0);
             file.seekg(middle, std::ios::beg);
-            std::getline(file, file_entry, '\n');
+            std::getline(file, file_entry, '\n'); // Goes to next line
 
-            std::getline(file, file_entry, '\n');
-            file_entry_stream.str(file_entry);
-            std::getline(file_entry_stream, term, ' ');
+            position = (long long int)file.tellg();
+            std::getline(file, term, ' ');
             if(search_term.compare(term) == 0){
                 file.close();
-                return file_entry;
+                return position;
             }
             else if(std::lexicographical_compare(search_term.begin(), search_term.end(), term.begin(), term.end())){
                 end = middle;
@@ -58,7 +58,7 @@ namespace search_engine {
             }
         }
         file.close();
-        return "";
+        return -1;
     }
 
     /**
@@ -134,19 +134,20 @@ namespace search_engine {
     }
 
     IndexCell* Search::search_index_entry(std::string word, char const* index_path){
-        std::string index_entrystring;
-        if(Search::vocabulary_index.find(word) != Search::vocabulary_index.end()){
+        int term_ni;
+        long long int index_position = -1;
+        std::string index_entry_string, found_term;
+        index_position = file_binary_search(word, index_path);
+        if(index_position >= 0){
             std::ifstream index_file(index_path);
-            index_file.seekg(Search::vocabulary_index[word], std::ios::beg);
-            std::getline(index_file, index_entrystring);
-            index_file.close();
-        }
-        else{
-            index_entrystring = file_binary_search(word, index_path);
-        }
-        if(index_entrystring.length() > 0){
-            IndexCell* index_entry = IndexCell::load(index_entrystring);
-            return index_entry;
+            index_file.seekg(index_position, std::ios::beg);
+            index_file >> found_term >> term_ni;
+            if((term_ni/COLLECTION_SIZE) < TERM_TOLERANCE){
+                std::getline(index_file, index_entry_string, '\n');
+                IndexCell* index_entry = IndexCell::load(found_term, term_ni, index_entry_string);
+                return index_entry;
+            }
+            else return nullptr;
         }
         else{
             return nullptr;
@@ -184,13 +185,13 @@ namespace search_engine {
         std::vector<std::string> response;
         std::string briefing_line;
 
-        if(query_params->size() <= 0){
+        if(query_params->size() == 0){
             return response;
         }
 
         for(index_it = query_params->begin(); index_it != query_params->end(); ++index_it){
             IndexCell* cell = index_it->second;
-            if(cell != nullptr && (cell->get_ni()/COLLECTION_SIZE) < 0.1){
+            if(cell != nullptr){
                 std::map<int, DocumentOccurrence*>* documents = cell->get_documents();
                 for(document_it = documents->begin(); document_it != documents->end(); ++document_it){
                     int document_id = document_it->first;
@@ -238,7 +239,7 @@ namespace search_engine {
                 query_params->operator[](term) = cell;
             }
             else{
-                std::cout << "Could not find any results matching " << term << "\n\n";
+                // std::cout << RED << "Could not find any results matching " << term << RESET << "\n\n";
                 query_params->erase(term);
             }
         }
@@ -272,20 +273,6 @@ namespace search_engine {
         else {
             return 0.0;
         }
-    }
-
-    void Search::init_vocabulary(char const* vocabulary_path){
-        std::ifstream vocabulary_file(vocabulary_path);
-        std::string word, line;
-        int position = vocabulary_file.tellg();
-
-        while(vocabulary_file >> word){
-            Search::vocabulary_index[word] = position;
-            std::getline(vocabulary_file, line);
-            position = vocabulary_file.tellg();
-        }
-
-        vocabulary_file.close();
     }
 
     void Search::init_rank_weights(char const* rank_path){
