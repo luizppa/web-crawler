@@ -69,7 +69,7 @@ namespace search_engine {
     void Indexer::index(const char* collection_path){
         int i, seconds;
         std::ifstream collection_file(collection_path);
-        std::ofstream collection_briefing_file(BRIEFING_PATH);
+        std::ofstream collection_briefing_file(BRIEFING_PATH, std::ios_base::binary);
         std::chrono::_V2::system_clock::time_point end_time, start_time;
 
         start_time = std::chrono::high_resolution_clock::now();
@@ -100,20 +100,22 @@ namespace search_engine {
     void Indexer::build_index(std::ifstream& collection_file, std::ofstream& collection_briefing_file, int pages_to_index, int iteration){
         std::string line;
         for(int i = 0; i < pages_to_index && std::getline(collection_file, line); i++){
-            int position = 0;
+            int position = 0, document_index = (pages_to_index*iteration)+i;
             std::pair<std::string, std::string> document_data = json::nlohmann_parse(line);
-            std::cout << BLUE << (pages_to_index*iteration)+i << RESET << " Building index for " << document_data.first << "...\t";
+            std::cout << BLUE << document_index << RESET << " Building index for " << document_data.first << "...\t";
             try{
                 std::istringstream file_content(TermSanitizer::html_text(document_data.second));
                 std::string briefing = file_content.str().substr(0,50);
                 briefing.erase(std::remove(briefing.begin(), briefing.end(), '\n'), briefing.end());
-                collection_briefing_file << (pages_to_index*iteration)+i << ' ' << document_data.first << '\n';
+
+                collection_briefing_file.write((char*) &document_index, 4);
+                collection_briefing_file.write(document_data.first.c_str(), document_data.first.size());
+
                 std::string word;
-                while(file_content >> word){
+                for(position = 0; file_content >> word; position++){
                     word = TermSanitizer::sanitize(word);
                     if(word.size() > 0){
-                        this->add_to_dictionary(word, (pages_to_index*iteration)+i, position);
-                        position++;
+                        this->add_to_dictionary(word, document_index, position);
                     }
                 }
                 std::cout << BOLDGREEN << "DONE!\n" << RESET;
@@ -123,6 +125,7 @@ namespace search_engine {
                 continue;
             }
         }
+
         if(!this->dictionary->empty()){
             this->save_index(iteration);
             for(std::map<std::string, IndexCell*>::iterator it = this->dictionary->begin(); it != this->dictionary->end(); ++it){

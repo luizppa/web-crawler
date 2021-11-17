@@ -13,7 +13,7 @@
 #include"../include/index-cell.hpp"
 #include"../include/term-sanitizer.hpp"
 #include"../include/document-occurrence.hpp"
-#include "../third_party/nlohmann/json.hpp"
+#include "../third-party/nlohmann/json.hpp"
 
 #define TERM_TOLERANCE 0.3
 

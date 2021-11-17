@@ -2,8 +2,8 @@
 #include<fstream>
 
 #include"../include/json.hpp"
-#include"../third_party/nlohmann/json.hpp"
-#include"../third_party/rapidjson/document.h"
+#include"../third-party/nlohmann/json.hpp"
+#include"../third-party/rapidjson/document.h"
 
 namespace search_engine {
 

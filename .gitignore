@@ -3,3 +3,6 @@ build/*
 
 output/**/*
 !output/.gitkeep
+
+logs/**/*
+!logs/.gitkeep

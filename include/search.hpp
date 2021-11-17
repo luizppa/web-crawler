@@ -8,7 +8,7 @@
 
 #include"./index-cell.hpp"
 
-#include"../third_party/nlohmann/json.hpp"
+#include"../third-party/nlohmann/json.hpp"
 
 namespace search_engine {
 

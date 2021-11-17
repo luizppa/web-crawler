@@ -82,7 +82,9 @@ namespace search_engine {
 
     void Crawler::start_task(){
         std::thread* thread = new std::thread(this->crawl_url, this);
-        this->threads_log.open(THREADS_LOG_PATH, std::ios::app);
+        if(!this->threads_log.is_open()){
+            this->threads_log.open(THREADS_LOG_PATH, std::ios::app);
+        }
         this->threads_log << "Created task " << thread->get_id() << '\n';
         this->threads_log.close();
         this->tasks.push_back(thread);
@@ -104,6 +106,9 @@ namespace search_engine {
 
     void Crawler::join_tasks(){
         std::vector<std::thread*>::iterator it = this->tasks.begin();
+        if(!this->threads_log.is_open()){
+            this->threads_log.open(THREADS_LOG_PATH, std::ios::app);
+        }
         while(it != this->tasks.end()){
             std::thread* thread = *it;
             ++it;
@@ -112,6 +117,7 @@ namespace search_engine {
             thread->join();
             delete thread;
         }
+        this->threads_log.close();
     }
 
     void Crawler::queue_if_unvisited(std::string url){

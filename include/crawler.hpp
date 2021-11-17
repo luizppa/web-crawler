@@ -14,8 +14,8 @@
 
 #define MAX_THREADS 50
 #define COLLECTION_PATH "./output/collection.jl"
-#define THREADS_LOG_PATH "./output/threads.log"
-#define ERROR_LOG_PATH "./output/error.log"
+#define THREADS_LOG_PATH "./logs/threads.log"
+#define ERROR_LOG_PATH "./logs/error.log"
 
 namespace search_engine {
 
